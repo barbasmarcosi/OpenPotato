@@ -31,8 +31,13 @@ jobs:
               with urllib.request.urlopen(req,timeout=25) as response:
                   raw=response.read()
                   mime=response.headers.get('Content-Type','')
-              if hashlib.md5(raw).hexdigest()!=record["md5"]:
-                  raise ValueError(f'Original checksum does not match published version for {label}')
+              digest_md5=hashlib.md5(raw).hexdigest()
+              if digest_md5!=record["md5"]:
+                  print("HASH_MISMATCH",label,"expected",record["md5"],"actual",digest_md5,
+                        "mime",mime,"size",len(raw),"prefix",repr(raw[:70]),flush=True)
+                  report[label]={"file_id":record["id"],"status":"checksum_mismatch_reject","actual_md5":digest_md5,
+                    "expected_md5":record["md5"],"content_type":mime}
+                  continue
               text=raw.decode("utf-8-sig")
               data=list(csv.reader(io.StringIO(text),delimiter="\t"))
               lengths={}
