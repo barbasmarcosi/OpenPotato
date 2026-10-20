@@ -6,7 +6,7 @@ import unittest
 from decimal import Decimal
 from pathlib import Path
 from openpotato.compare import compare, DEFAULT_SOURCE
-from openpotato.m1 import load_food, DEFAULT_FOOD
+from openpotato.m1 import load_food, DEFAULT_FOOD, DEFAULT_REFERENCES, run
 
 class TestPreparations(unittest.TestCase):
     def test_direct_usda_is_default(self):
@@ -35,6 +35,17 @@ class TestPreparations(unittest.TestCase):
                 handle.write("\n")
             with self.assertRaisesRegex(ValueError,"SHA-256"):
                 compare(source,Path(temp)/"output")
+
+    def test_each_scenario_manifest_identifies_its_actual_food(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run(food_path=DEFAULT_SOURCE/"potato_fdc_170440_usda.csv",
+                reference_path=DEFAULT_REFERENCES,
+                output_dir=Path(temp),
+                grams_list=(Decimal(400),),
+                energy_kcal=Decimal(2000))
+            metadata=json.loads((Path(temp)/"manifest.json").read_text())
+            self.assertIn("170440",metadata["food_id"])
+            self.assertNotIn("170438",metadata["food_id"])
 
     def test_previous_proxy_values_reconciled(self):
         old=load_food(DEFAULT_SOURCE.parent/"potato_fdc_170438_proxy.csv")
