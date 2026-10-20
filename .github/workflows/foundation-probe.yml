@@ -1,0 +1,49 @@
+name: M1 Foundation schema probe
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths: [".github/workflows/foundation-probe.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descargar fuente primaria y revisar relaciones reales
+        run: |
+          curl -fsSL --retry 2 --max-time 150 https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2026-04-30.zip -o /tmp/foundation.zip
+          python - <<'PY'
+          import csv, io, zipfile, collections
+          z=zipfile.ZipFile('/tmp/foundation.zip')
+          tables={n.rsplit('/',1)[-1].lower():n for n in z.namelist()}
+          print("SCHEMAS")
+          for name in sorted(tables):
+              if name in ('food.csv','food_nutrient.csv','sample_food.csv','sub_sample_food.csv','sub_sample_result.csv','market_acquisition.csv','acquisition_samples.csv','agricultural_samples.csv','foundation_food.csv','lab_method.csv'):
+                  with z.open(tables[name]) as f:
+                      reader=csv.DictReader(io.TextIOWrapper(f,encoding='utf-8-sig',newline=''))
+                      print(name,reader.fieldnames)
+          def get(name):
+              with z.open(tables[name]) as f:
+                  yield from csv.DictReader(io.TextIOWrapper(f,encoding='utf-8-sig',newline=''))
+          targets={'2346401','2346402','2346403'}
+          nutrient_id_by_root={}
+          for r in get('food_nutrient.csv'):
+              if r['fdc_id'] in targets and r['nutrient_id'] in ('1089','1095','1162','1092'):
+                  nutrient_id_by_root[r['id']]=(r['fdc_id'],r['nutrient_id'])
+          print("FOOD_NUTRIENT_IDS",nutrient_id_by_root)
+          for name in ('sample_food.csv','sub_sample_food.csv','sub_sample_result.csv','market_acquisition.csv','acquisition_samples.csv','agricultural_samples.csv'):
+              if name not in tables: continue
+              rows=list(get(name))
+              print("TABLE",name,"rows",len(rows),"first",rows[0] if rows else None)
+              matches=[]
+              for row in rows:
+                  if any(v in targets or v in nutrient_id_by_root for v in row.values()):
+                      matches.append(row)
+              print("MATCHES",name,"count",len(matches),"sample",matches[:5])
+          PY
