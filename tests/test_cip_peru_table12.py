@@ -107,7 +107,7 @@ class PeruTable12Tests(unittest.TestCase):
     def test_duplicate_material_id_refused_even_if_source_hash_updated(self):
         with tempfile.TemporaryDirectory() as td:
             tsv, subset, meta = generate(td, mutate_raw=lambda rows:
-                                         rows[1].__setitem__("INSTN", rows[0]["INSTN"]))
+                                         rows[20].__setitem__("INSTN", rows[21]["INSTN"]))
             with self.assertRaisesRegex(ValueError, "repeated"):
                 run(tsv, Path(td) / "out", subset, meta, checksum(tsv))
 
