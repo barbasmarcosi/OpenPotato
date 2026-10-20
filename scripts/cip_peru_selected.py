@@ -53,8 +53,17 @@ def transform(path:Path,output:Path,pinned_sha=PUBLIC_SHA):
         source=list(rdr)
     if len(source)!=EXPECTED_ROWS:
         raise ValueError(f"Expected {EXPECTED_ROWS} rows from published selected-clone table, got {len(source)}")
+    # The final three records in the public table are statistical footer
+    # lines labelled Mean, Max, Min — NOT additional genotypes.
+    footers=source[-3:]
+    if [(r["INSTN"].strip(),r["nFEDW"].strip(),r["nZNDW"].strip()) for r in footers]!=[
+        ("","Mean","Prom"),("","Max","Max"),("","Min","Min")]:
+        raise ValueError("Unexpected CIP Table 16 footer layout")
+    clone_entries=source[:-3]
+    if len(clone_entries)!=14:
+        raise ValueError("Expected 12 selected clones and two reference varieties")
     used=set();rows=[]
-    for i,entry in enumerate(source,2):
+    for i,entry in enumerate(clone_entries,2):
         accession=entry["INSTN"].strip()
         if not accession or accession in used:raise ValueError("Duplicate or empty accession in Table 16")
         used.add(accession)
@@ -86,8 +95,10 @@ def transform(path:Path,output:Path,pinned_sha=PUBLIC_SHA):
         "derived_csv_sha256":sha256(csvpath),
         "accessions":len(used),"nutrient_rows":len(rows),
         "trait_units":{"iron":"mg/kg dry","zinc":"mg/kg dry"},
-        "source_table":"Tabla 16; summary statistics per selected accession",
+        "source_table":"Tabla 16; 12 selected CIP clones + 2 commercial controls; 3 footer summary rows excluded",
+        "non_accession_summary_rows_excluded":3,
         "prohibitions":[
+            "The final three source rows are global Mean/Max/Min footers, not accessions.",
             "Reported n may represent pooled observations; biological plot independence not established.",
             "Mean/sd/min/max are PUBLISHED aggregate statistics, not raw replicates.",
             "No p-values, inferential G×E effects or cultivar stability can be recomputed from this dataset.",
