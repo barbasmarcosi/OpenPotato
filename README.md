@@ -2,7 +2,7 @@
 
 **Investigación abierta para mejorar la nutrición humana mediante papas más nutritivas, productivas, seguras y accesibles.**
 
-> Estado: **M1-10 — trazabilidad CIP y suelos públicos verificados (20-10-2026)**. Datos verificados: USDA, ensayo Holetta de 45 genotipos, ensayo histórico multientorno solo de rendimiento, **catálogo CIP abierto de 29 clones**, **15 accesiones compartidas entre publicaciones**, y **Tabla 16 pública de Perú con 14 materiales y Fe/Zn agregados**, y **12 clones del Perú compartidos con catálogo CIP, ocho también presentes en Holetta**. Se auditaron además las filas originales de Tabla 16 y una tabla independiente de suelos de 9 localidades (27 resúmenes de pH/Fe/Zn de suelo). Los microdatos de minerales XRF por parcela siguen restringidos; no hay validación experimental propia ni prueba G×E nutricional.
+> Estado: **M1-11 — 34 materiales CIP Perú y conciliación exacta de tablas públicas (20-10-2026)**. Datos verificados: USDA, ensayo Holetta de 45 genotipos, ensayo histórico multientorno solo de rendimiento, **catálogo CIP abierto de 29 clones**, **15 accesiones compartidas entre publicaciones**, y **Tabla 16 pública de Perú con 14 materiales y Fe/Zn agregados**, y **12 clones del Perú compartidos con catálogo CIP, ocho también presentes en Holetta**. Se auditaron además las filas originales de Tabla 16 y una tabla independiente de suelos de 9 localidades (27 resúmenes de pH/Fe/Zn de suelo). La Tabla 12 pública del CIP incluye 30 clones evaluados y 4 testigos (68 agregados Fe/Zn), de los cuales 28 resúmenes ya están contenidos en Tabla 16; 20 materiales son adicionales. Los microdatos de minerales XRF por parcela siguen restringidos; no hay validación experimental propia ni prueba G×E nutricional.
 
 ## La pregunta central
 
@@ -39,6 +39,7 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 | [M1-07 — resumen público Perú](docs/20-peru-tabla16-resumenes.md) | Tabla mineral por 14 accesiones, fuente y límites de los agregados |
 | [M1-08 — triangulación y nuevas vías experimentales](docs/21-m1-08-triangulacion-y-vias-experimentales.md) | Cruce CIP Perú / catálogo / Holetta, 12+8 coincidencias verificadas, estrategias genéticas y agronómicas y límites |
 | [M1-09/M1-10 — filas, suelos y genómica](docs/22-m1-09-10-filas-suelos-genomica.md) | Auditoría 28 estadísticas por fila original, nueve sitios de suelo público y GWAS de 288 accesiones tetraploides (datos fenotípicos por solicitar) |
+| [M1-11 — Tabla 12 pública CIP](docs/23-m1-11-tabla12-cip-resumenes.md) | Importación auditable de 68 resúmenes Fe/Zn de 34 materiales, con 28 filas compartidas y no independientes de Tabla 16 |
 | [Acceso CIP Dataverse](research/cip-dataverse-access.csv) | Acceso público o restringido verificado por archivo y DOI |
 | [Fuentes multientorno candidatas](research/multienvironment-candidates.csv) | Catálogo con estado de acceso, granularidad y licencias pendientes |
 | [Zinc — contraste genético/agronómico](docs/15-biofortificacion-zinc-comparacion.md) | Estudio agrícola primario 2026 y nueva hipótesis alternativa |
@@ -55,6 +56,7 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 - **Incorporado de CIP:** 29 clones de catálogo con 10 no dominados en Fe/Zn/rendimiento kg/planta; 15 clones emparejados por ID con Holetta; datos agregados Fe/Zn de 14 materiales de Tabla 16 peruana (12 seleccionados + 2 controles); **12 cruces exactos de Perú con catálogo y 8 en las tres fuentes**, sin mezclar muestras; licencias, hashes y restricciones auditados.
 - **Validado (M1-08):** seis pruebas nuevas y pipeline de solo lectura para comparar tres fuentes con control de hash, DOI, unidades y ausentes; sin inventar réplicas ni obtener inferencia G×E.
 - **Validado (M1-09/M1-10):** 28 estadísticas Fe/Zn de Tabla 16 cotejadas por igualdad decimal con cada fila original y 3 filas de pie documentadas; 9 localidades con 27 resúmenes auténticos de pH, Fe/Zn **de suelo**, separados de los tubérculos. 105 pruebas aprobadas en CI y workflows con permisos de solo lectura; sin combinar material × suelo ni extrapolar causalidad.
+- **Validado (M1-11):** nueva fuente CIP original 6980 con 30 clones biofortificados evaluados y cuatro controles; 68 filas Fe/Zn publicadas para 34 materiales, incluida la coincidencia exacta de los 28 registros de Tabla 16 (no doble conteo). 29 accesiones coinciden con el catálogo CIP, con CIP312686.019 como clon adicional; **no se infiere selección definitiva**.
 - **Pendiente científicamente:** ensayos reales con Fe/Zn y rendimiento por parcela repetidos en múltiples ambientes, verificación de estabilidad, procesamiento, biodisponibilidad y seguridad. Seguimiento: [issue #7](https://github.com/barbasmarcosi/OpenPotato/issues/7).
 - **No iniciado:** biofortificación experimental, simulación genética de cultivares, estudios de absorción humana y evaluación multisitio.
 
