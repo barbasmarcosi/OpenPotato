@@ -1,0 +1,60 @@
+name: M1 primary USDA verification
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/**"
+      - "tests/test_usda_import.py"
+      - ".github/workflows/usda-official.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  official-usda-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validar importador con datos sintéticos y modelo original
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Descargar USDA SR Legacy 2018 (fuente primaria)
+        run: |
+          curl --fail --location --retry 2 --retry-all-errors --connect-timeout 15 \
+            --max-time 150 --silent --show-error \
+            "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip" \
+            --output /tmp/fdc_sr_legacy_2018.zip
+          python -c "import zipfile; assert zipfile.is_zipfile('/tmp/fdc_sr_legacy_2018.zip')"
+      - name: Extraer dos preparaciones y ejecutar reporte nutricional
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.usda_sr_legacy --zip /tmp/fdc_sr_legacy_2018.zip --output-dir /tmp/usda-official
+          python -m openpotato.m1 --food /tmp/usda-official/potato_fdc_170438_usda.csv --output /tmp/m1-usda-438
+          python -m openpotato.m1 --food /tmp/usda-official/potato_fdc_170440_usda.csv --output /tmp/m1-usda-440
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+          for food_id in ("170438","170440"):
+              p=Path("/tmp/usda-official")/f"potato_fdc_{food_id}_usda.csv"
+              with p.open() as f:
+                  rows={r["nutrient"]:r for r in csv.DictReader(f)}
+              print(food_id,{n: (rows[n]["amount_per_100g"], rows[n]["status"])
+                             for n in ("energy_kcal","iron","zinc","vitamin_c","folate_dfe","vitamin_b12","linoleic_acid")})
+          PY
+      - name: Publicar dataset extraído y reportes auditables
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-fdc-sr-legacy-m1
+          retention-days: 30
+          path: |
+            /tmp/usda-official/
+            /tmp/m1-usda-438/
+            /tmp/m1-usda-440/
