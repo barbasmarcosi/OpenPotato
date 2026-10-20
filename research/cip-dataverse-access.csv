@@ -1,6 +1,6 @@
 dataset_key,doi,scope,data_access,license_status,files_verified,primary_payload_state,notes
 CIP_CLONE_CATALOGUE,10.21223/P3/LQOT7Z,29 biofortified clone summaries,public,CC_BY_4_0,2,verified_and_normalized,XLS and dictionary both pinned by SHA256
-CIP_PERU_NINE,10.21223/N11QJS,9 field experiments in 5 departments,public,CC_BY_4_0,16,public_summary_files_6979_and_6970_verified_other_files_not_audited,File 6979 has 14 materials with 28 tuber Fe Zn published summaries; file 6970 has nine soil localities with 27 site summaries; plot-level XRF still not available
+CIP_PERU_NINE,10.21223/N11QJS,9 field experiments in 5 departments,public,CC_BY_4_0,16,public_summary_files_6979_6980_and_soils_6970_verified_other_files_not_audited,File 6980 contains 34 materials and 68 Fe Zn aggregate summaries; file 6979 is exactly a 14-material subset; file 6970 has nine soil sites and 27 site aggregates; no plot-level XRF accessible
 CIP_HUANCAVELICA_PVS,10.21223/P3/8NEIZP,participatory Huancavelica trial,restricted_primary_dataset,CC_BY_4_0_general_terms,2,not_downloaded,Primary tab restricted and dictionary open
 CIP_LALIBERTAD_XRF,10.21223/HRLAI0,La Libertad mineral assay datasets,restricted_primary_dataset,CC_BY_4_0_general_terms,3,not_downloaded,Two XRF tab files restricted
 CIP_HUANCAVELICA_XRF,10.21223/T7JUCL,Huancavelica XRF mineral dataset,restricted_primary_dataset,CC_BY_4_0_general_terms,2,not_downloaded,One XRF tab restricted
