@@ -38,6 +38,10 @@ Decisiones fundacionales registradas el 2026-10-19. Se revisarán frente a evide
 
 **Estado: aceptada.** Reportar resultados negativos, valores faltantes y fallos del modelo; ninguna cifra sin unidad, base, versión y fuente.
 
+## OP-ADR-010 — Stack científico incremental
+
+**Estado: aceptado para M1, condicionado para M2/M3.** No comprometer el proyecto prematuramente con AlphaFold, COBRApy, modelos generativos, GPUs o una arquitectura de aplicaciones compleja. Priorizar datos, reproducibilidad, nutrición y optimización sencilla. Seleccionar herramientas biológicas solo a partir de hipótesis respaldadas por evidencia; distinguir AlphaFold DB (CC BY 4.0) de AlphaFold 3 Server (restricciones adicionales). Ver [evaluación técnica](10-herramientas-y-metodologia.md).
+
 ## Pendientes para primera revisión
 
 - Población y zona geográfica concreta de la primera línea base.

@@ -29,6 +29,7 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 | [Fuentes](docs/07-fuentes-y-trazabilidad.md) | Bibliografía inicial verificada y registro de evidencia |
 | [Colaboración](docs/08-colaboracion.md) | Cómo participar y potenciales alianzas |
 | [Decisiones](docs/09-registro-de-decisiones.md) | Decisiones arquitectónicas y científicas |
+| [Herramientas y método](docs/10-herramientas-y-metodologia.md) | Stack inicial, alternativas y condiciones para activar bioinformática e IA |
 | [Registro estructurado](research/evidence-register.csv) | Evidencia bibliográfica inicial apta para análisis |
 
 ## Primera entrega verificable
