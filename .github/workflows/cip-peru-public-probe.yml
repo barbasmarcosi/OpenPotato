@@ -1,0 +1,53 @@
+name: CIP Peru nine-sites open-table inventory
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths: [".github/workflows/cip-peru-public-probe.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Download ONLY unrestricted Dataverse tables and inspect their schema
+        run: |
+          python - <<'PY'
+          import csv,io,hashlib,json,os,urllib.request
+          # IDs and MD5 from public CIP Dataverse metadata version 1.0.
+          files={
+            "clones_selected":{"id":6979,"md5":"170766ab8217f2b6d38f62c646616268"},
+            "analysis_correlation":{"id":6983,"md5":"e3a5d10bcf64627bc1a5ffa0152907ff"},
+            "dry_matter_lab":{"id":6980,"md5":"6ba7f982da7cc2073693cf0b1e13f253"},
+            "soils_nine_sites":{"id":6970,"md5":"511885a4ab3215d635fe32c92cbfb815"},
+          }
+          report={}
+          for label,record in files.items():
+              url=f'https://data.cipotato.org/api/access/datafile/{record["id"]}'
+              req=urllib.request.Request(url,headers={"User-Agent":"OpenPotato-Research/0.1"})
+              with urllib.request.urlopen(req,timeout=25) as response:
+                  raw=response.read()
+                  mime=response.headers.get('Content-Type','')
+              if hashlib.md5(raw).hexdigest()!=record["md5"]:
+                  raise ValueError(f'Original checksum does not match published version for {label}')
+              text=raw.decode("utf-8-sig")
+              data=list(csv.reader(io.StringIO(text),delimiter="\t"))
+              lengths={}
+              for row in data:lengths[len(row)]=lengths.get(len(row),0)+1
+              entry={"file_id":record["id"],"sha256":hashlib.sha256(raw).hexdigest(),
+                     "rows":len(data),"columns_by_row":lengths,"content_type":mime,
+                     "first_rows":data[:4]}
+              report[label]=entry
+              print(label,json.dumps(entry,ensure_ascii=False)[:9000],flush=True)
+          os.makedirs("/tmp/cip-peru-audit",exist_ok=True)
+          with open("/tmp/cip-peru-audit/open_tables_schema.json","w") as f:
+              json.dump(report,f,indent=2,ensure_ascii=False)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cip-peru-nine-sites-open-table-schemas
+          retention-days: 30
+          path: /tmp/cip-peru-audit/open_tables_schema.json
