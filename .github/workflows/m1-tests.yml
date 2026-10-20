@@ -1,0 +1,37 @@
+name: M1 reproducibility
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+  pull_request:
+    paths:
+      - "src/**"
+      - "datasets/**"
+      - "tests/**"
+      - ".github/workflows/m1-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pruebas offline, sin dependencias de terceros
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -v
+      - name: Ejecutar OP-M1-001 y verificar resultados
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m openpotato.m1 --output /tmp/openpotato-m1
+          test -s /tmp/openpotato-m1/coverage.csv
+          test -s /tmp/openpotato-m1/manifest.json
+          test -s /tmp/openpotato-m1/report.md
+          cat /tmp/openpotato-m1/report.md
