@@ -1,0 +1,41 @@
+name: CIP clone catalogue XLS inspection
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths: [".github/workflows/cip-xls-inspect.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar lector XLS para inspección de archivos científicos originales
+        run: python -m pip install "xlrd==2.0.2"
+      - name: Descargar ficheros públicos desde Dataverse CIP (licencia CC BY 4.0)
+        run: |
+          curl -fsSL --retry 2 --max-time 50 "https://data.cipotato.org/api/access/datafile/2211" -o /tmp/cip-clones.xls
+          curl -fsSL --retry 2 --max-time 50 "https://data.cipotato.org/api/access/datafile/2212" -o /tmp/cip-dictionary.xls
+          echo "9899ade1e320484b2a909e75a3e1d486  /tmp/cip-clones.xls" | md5sum -c -
+          echo "755da0d1d91d09873ec95fe68451f928  /tmp/cip-dictionary.xls" | md5sum -c -
+          sha256sum /tmp/cip-clones.xls /tmp/cip-dictionary.xls
+      - name: Reportar esquemas de hojas, unidades y ejemplos acotados
+        run: |
+          python - <<'PY'
+          import xlrd, hashlib
+          for path in ('/tmp/cip-clones.xls','/tmp/cip-dictionary.xls'):
+              book=xlrd.open_workbook(path)
+              print("FILE",path,"SHEETS",book.sheet_names(),flush=True)
+              for sheet in book.sheets():
+                  print("SHEET",sheet.name,"ROWS",sheet.nrows,"COLS",sheet.ncols,flush=True)
+                  for i in range(min(sheet.nrows,15)):
+                      row=[str(cell.value).strip()[:110] for cell in sheet.row(i)[:min(sheet.ncols,35)]]
+                      print("ROW",i,repr(row),flush=True)
+          PY
