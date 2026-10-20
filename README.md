@@ -2,7 +2,7 @@
 
 **Investigación abierta para mejorar la nutrición humana mediante papas más nutritivas, productivas, seguras y accesibles.**
 
-> Estado: **fase 0 — fundación documental y diseño de investigación** (19-10-2026). No hay variedades desarrolladas, ensayos propios ni resultados experimentales del proyecto.
+> Estado: **M1 en ejecución (20-10-2026)** en rama research/m1-nutrition-baseline; primera implementación probada en CI (10/10 tests). Datos preliminares basados en transcripción secundaria de USDA, pendientes de contraste con fuente oficial. No hay variedades nuevas ni ensayos biológicos del proyecto.
 
 ## La pregunta central
 
@@ -30,6 +30,8 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 | [Colaboración](docs/08-colaboracion.md) | Cómo participar y potenciales alianzas |
 | [Decisiones](docs/09-registro-de-decisiones.md) | Decisiones arquitectónicas y científicas |
 | [Herramientas y método](docs/10-herramientas-y-metodologia.md) | Stack inicial, alternativas y condiciones para activar bioinformática e IA |
+| [M1 implementación](docs/11-m1-primera-ejecucion.md) | Ejecutar análisis y pruebas sin dependencias ni internet |
+| [M1 resultados preliminares](docs/12-m1-resultados-preliminares.md) | Resultados de CI, cálculos y limitaciones |
 | [Registro estructurado](research/evidence-register.csv) | Evidencia bibliográfica inicial apta para análisis |
 
 ## Primera entrega verificable
