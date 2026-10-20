@@ -2,7 +2,7 @@
 
 **Investigación abierta para mejorar la nutrición humana mediante papas más nutritivas, productivas, seguras y accesibles.**
 
-> Estado: **M1 en ejecución (20-10-2026)**. Dos conjuntos primarios USDA ya están normalizados y versionados: **SR Legacy (papa hervida, 2 preparaciones)** y **Foundation Foods (papa cruda, 3 tipos comerciales)**. Última batería automatizada: 32 pruebas aprobadas; no hay ensayos biológicos, cultivares nuevos ni validación nutricional independiente.
+> Estado: **M1-03 con análisis de 24 muestras completado (20-10-2026)**. Dos conjuntos primarios USDA versionados: **SR Legacy (2 preparaciones hervidas)** y **Foundation Foods (3 tipos comerciales crudos)**. Se reconstruyeron **96 resultados químicos de laboratorio** (8 compras por tipo × 4 nutrientes) con trazabilidad hasta adquisición, submuestra y método analítico; **42 pruebas automatizadas aprobadas**. No hay ensayos biológicos propios ni cultivares genéticamente verificados.
 
 ## La pregunta central
 
@@ -32,6 +32,7 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 | [Herramientas y método](docs/10-herramientas-y-metodologia.md) | Stack inicial, alternativas y condiciones para activar bioinformática e IA |
 | [USDA — verificación primaria](docs/13-usda-verificacion-primaria.md) | Fichas oficiales de dos preparaciones hervidas |
 | [USDA Foundation — tipos comerciales](docs/14-foundation-tipos-comerciales.md) | Tres tipos crudos, datos y método para comparar variación descriptiva |
+| [M1-03 — dispersión en muestras reales](docs/16-variabilidad-muestras-usda.md) | Reconstrucción de 24 muestras, 96 análisis y límites de generalización |
 | [Zinc — contraste genético/agronómico](docs/15-biofortificacion-zinc-comparacion.md) | Estudio agrícola primario 2026 y nueva hipótesis alternativa |
 | [M1 implementación](docs/11-m1-primera-ejecucion.md) | Ejecutar análisis y pruebas sin dependencias ni internet |
 | [M1 resultados preliminares](docs/12-m1-resultados-preliminares.md) | Resultados de CI, cálculos y limitaciones |
@@ -40,7 +41,8 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 ## Estado de resultados
 
 - **Completado técnicamente:** modelo de cobertura nutricional (2 perfiles de referencia), controles de unidades y faltantes, extracción directa USDA, comparación de dos preparaciones y tres tipos comerciales, procedencia SHA-256, CI offline.
-- **En curso científicamente:** separar incertidumbre de muestreo, diferencias entre variedades genéticas reales y efectos del procesamiento/ambiente; revisión externa de interpretación y selección de nuevos datasets. Próximo trabajo: [variabilidad por muestra, issue #6](https://github.com/barbasmarcosi/OpenPotato/issues/6).
+- **Completado para esta cohorte comercial:** variabilidad descriptiva de ocho muestras por tipo para Fe, Zn, K y vitamina C; conciliación con medianas y rangos del USDA. Compras limitadas a Virginia (EE. UU.) en 2022, no un ensayo genético.
+- **Pendiente científicamente:** cultivares de identidad genética confirmada, ensayos replicados multisitio, procesamiento, incertidumbre entre ambientes y revisión experta. Seguimiento: [issue #6](https://github.com/barbasmarcosi/OpenPotato/issues/6).
 - **No iniciado:** biofortificación experimental, simulación genética de cultivares, estudios de absorción humana y evaluación multisitio.
 
 ## Primera entrega verificable
