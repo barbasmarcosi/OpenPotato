@@ -175,7 +175,7 @@ def run(tsv, out, table16=TABLE16, table16_meta=TABLE16_META, source_sha=SHA256)
                 matches.add(key)
             output.append({
                 "accession": accession, "breeder_code": breeder,
-                "material_role": "commercial_control" if accession in CONTROLS else "selected_clone",
+                "material_role": "commercial_control" if accession in CONTROLS else "evaluated_biofortified_clone",
                 "source_tsv_line": line, "source_file_id": FILE_ID,
                 "nutrient": trait, "unit": unit, "reported_n": int(n),
                 "published_mean": raw[mean], "published_sd": raw[sd],
@@ -184,7 +184,7 @@ def run(tsv, out, table16=TABLE16, table16_meta=TABLE16_META, source_sha=SHA256)
                 "also_in_table16_same_statistic": "true" if other else "false",
             })
     if len(seen_materials) != MATERIAL_COUNT or len(CONTROLS & seen_materials) != 4:
-        raise ValueError("Table 12 expected 30 selected clones and four commercial controls")
+        raise ValueError("Table 12 expected 30 evaluated clones and four commercial controls")
     if matches != set(subset):
         raise ValueError("Table 16 not fully contained in public Table 12")
     # Non-overlapping records belong to different materials in the same programme.
@@ -206,7 +206,7 @@ def run(tsv, out, table16=TABLE16, table16_meta=TABLE16_META, source_sha=SHA256)
         "source_export_md5": EXPORT_MD5, "source_stored_metadata_md5": STORED_MD5,
         "table16_source_file_id": 6979,
         "table16_derived_sha256": checksum(table16),
-        "materials": len(seen_materials), "selected_clones": 30, "controls": 4,
+        "materials": len(seen_materials), "evaluated_clones": 30, "controls": 4,
         "mineral_summary_rows": len(output),
         "statistics_overlapping_table16": len(matches),
         "materials_overlapping_table16": len({key[0] for key in matches}),
@@ -228,7 +228,7 @@ def run(tsv, out, table16=TABLE16, table16_meta=TABLE16_META, source_sha=SHA256)
     (out / "peru_table12_report.md").write_text(
         "# OP-M1-11 — Tabla 12 pública CIP Perú: Fe/Zn agregados\n\n"
         f"Archivo Dataverse {FILE_ID}; https://doi.org/{DOI}.\n\n"
-        f"- {len(seen_materials)} materiales = 30 clones seleccionados + 4 controles.\n"
+        f"- {len(seen_materials)} materiales = 30 clones evaluados + 4 controles.\n"
         f"- {len(output)} registros Fe/Zn con n, media, SD y rango **publicados**.\n"
         f"- Los {len(matches)} registros de los 14 materiales de Tabla 16 son **idénticos**, "
         "no réplicas independientes.\n"
