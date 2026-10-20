@@ -23,7 +23,11 @@ EXPECTED = {
 }
 # Exact FDC nutrient identifiers; never use NDB numeric codes here.
 TARGETS = {
-    "energy_kcal": (1008, "kcal"), "protein": (1003, "g"),
+    # Foundation since 2020 uses two Atwater energy definitions (2047, 2048).
+    # Never synthesize a kcal value from carbohydrates without a justified method.
+    "energy_atwater_general_kcal": (2047, "kcal"),
+    "energy_atwater_specific_kcal": (2048, "kcal"),
+    "protein": (1003, "g"),
     "total_lipid": (1004, "g"), "carbohydrate": (1005, "g"),
     "fiber": (1079, "g"), "iron": (1089, "mg"),
     "zinc": (1095, "mg"), "calcium": (1087, "mg"),
