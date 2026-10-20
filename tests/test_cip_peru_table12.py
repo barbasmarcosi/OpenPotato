@@ -80,7 +80,7 @@ class PeruTable12Tests(unittest.TestCase):
             output = Path(td) / "normalized"
             report = run(tsv, output, subset, meta, checksum(tsv))
             self.assertEqual(report["materials"], 34)
-            self.assertEqual(report["selected_clones"], 30)
+            self.assertEqual(report["evaluated_clones"], 30)
             self.assertEqual(report["controls"], 4)
             self.assertEqual(report["mineral_summary_rows"], 68)
             self.assertEqual(report["statistics_overlapping_table16"], 28)
