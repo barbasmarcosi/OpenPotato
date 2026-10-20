@@ -1,0 +1,30 @@
+accession_id,breeder_code,female_parent,male_parent,yield_kg_per_plant,dry_matter_percent,vitamin_c_mg_per_100g_dry,vitamin_c_status,iron_mg_per_kg_dry,iron_min_mg_per_kg_dry,iron_max_mg_per_kg_dry,zinc_mg_per_kg_dry,zinc_min_mg_per_kg_dry,zinc_max_mg_per_kg_dry,late_blight_label,pvy_label,flavour_label,pareto_yield_fe_zn,source_doi,data_level
+CIP312507.311,BIOT-507.311,CIP391058.175,CIP306416.68,0.87,22.67,,not_reported,25.21,18.28,32.34,22.21,14.32,29.13,MR,R,Tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312507.312,BIOT-507.312,CIP391058.175,CIP306416.68,0.94,25.1,,not_reported,22.29,17.0,27.97,17.89,14.6,25.5,MR,R,Tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312609.247,BIOT-609.247,CIP393083.2,CIP306416.68,0.82,22.42,30.27,observed,25.21,15.99,38.13,21.41,11.64,30.54,R,,Moderately tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312621.069,BIOT-621.069,CIP393382.44,CIP306416.68,0.87,24.47,41.33,observed,29.18,22.66,37.33,22.55,11.26,29.73,R,S,Tasteful,true,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312621.097,BIOT-621.097,CIP393382.44,CIP306416.68,0.65,26.16,46.56,observed,29.18,24.16,43.97,19.77,13.33,28.73,MR,S,Tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312633.294,BIOT-633.294,CIP393536.13,CIP306416.68,0.92,26.3,35.29,observed,25.72,17.72,34.61,22.23,12.09,29.15,MR,R,Tasteful,true,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312637.001,BIOT-637.001,CIP393536.13,CIP306418.69,0.53,26.37,33.13,observed,24.63,17.56,30.87,20.25,14.68,26.55,MR,R,Very tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312637.089,BIOT-637.089,CIP393536.13,CIP306418.69,0.81,25.58,30.22,observed,29.08,22.89,36.63,23.72,16.45,31.92,MR,R,Tasteful,true,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312682.042,BIOT-682.042,CIP394600.52,CIP306416.68,0.58,21.26,,not_reported,28.13,22.07,37.74,23.07,15.89,30.15,MR,,Tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312721.036,BIOT-721.036,CIP395017.229,CIP306416.68,0.67,26.0,28.83,observed,23.69,18.56,27.55,22.76,9.6,28.62,HR,,Tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312721.038,BIOT-721.038,CIP395017.229,CIP306416.68,0.61,21.85,36.95,observed,25.72,20.07,30.45,18.95,9.65,28.45,MR,R,Tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312721.074,BIOT-721.074,CIP395017.229,CIP306416.68,0.71,26.09,42.92,observed,24.02,19.67,26.98,18.57,10.5,27.3,R,R,Moderately tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312721.163,BIOT-721.163,CIP395017.229,CIP306416.68,0.61,24.71,35.16,observed,25.8,21.13,31.08,18.14,7.42,26.63,HR,,Moderately tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312721.245,BIOT-721.245,CIP395017.229,CIP306416.68,0.71,23.23,,not_reported,32.01,24.49,39.33,27.02,16.81,39.44,MR,,Tasteful,true,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312721.286,BIOT-721.286,CIP395017.229,CIP306416.68,0.96,23.9,31.02,observed,25.24,18.36,28.15,21.6,13.47,27.15,R,S,Very tasteful,true,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312725.024,BIOT-725.024,CIP395017.229,CIP306418.69,0.68,22.43,45.67,observed,29.7,24.07,38.24,26.04,13.31,35.52,R,S,Tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312725.047,BIOT-725.047,CIP395017.229,CIP306418.69,0.45,25.16,,not_reported,33.24,31.58,36.47,27.17,21.71,36.29,HR,,Tasteful,true,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312725.050,BIOT-725.050,CIP395017.229,CIP306418.69,0.77,23.07,54.42,observed,25.9,20.03,30.92,18.19,9.26,26.53,R,S,Tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312725.067,BIOT-725.067,CIP395017.229,CIP306418.69,0.55,21.38,25.46,observed,26.76,20.29,32.43,23.98,13.68,32.96,MR,,Moderately tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312735.105,BIOT-735.105,CIP395017.242,CIP306416.68,0.57,25.98,,not_reported,29.51,19.52,38.59,23.35,18.52,27.05,MR,R,Moderately tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312747.056,BIOT-747.056,CIP395112.32,CIP306416.68,0.5,24.26,28.73,observed,30.58,20.81,38.47,26.08,17.23,39.56,MR,S,,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312751.021,BIOT-751.021,CIP395112.32,CIP306418.69,0.9,24.18,37.54,observed,28.11,20.72,37.55,20.96,14.02,30.78,R,R,Tasteful,true,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312751.025,BIOT-751.025,CIP395112.32,CIP306418.69,0.68,26.75,28.06,observed,23.5,16.29,31.52,19.93,11.91,28.59,R,R,Moderately tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312763.051,BIOT-763.051,CIP395443.103,CIP306416.68,0.57,27.75,,not_reported,24.24,20.18,32.32,27.38,21.13,32.36,MR,R,Very tasteful,true,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312763.441,BIOT-763.441,CIP395443.103,CIP306416.68,0.75,24.02,,not_reported,25.65,21.83,27.69,24.84,20.49,32.69,MR,R,Moderately tasteful,true,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312764.006,BIOT-764.006,CIP395443.103,CIP306418.1,0.45,24.09,,not_reported,22.51,17.62,27.18,24.77,15.04,31.11,R,R,Moderately tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312767.014,BIOT-767.014,CIP395443.103,CIP306418.69,0.8,24.3,32.55,observed,27.62,25.32,31.77,22.83,12.58,34.39,MR,,Tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312787.011,BIOT-787.011,CIP397060.19,CIP306418.69,0.87,24.05,,not_reported,27.54,18.35,39.24,24.07,21.8,26.38,MR,R,Tasteful,true,10.21223/P3/LQOT7Z,catalogue_clone_summary
+CIP312871.043,BIOT-871.043,CIP780278,CIP306418.69,0.75,25.72,34.68,observed,27.08,16.67,32.62,23.51,17.32,29.03,R,,Very tasteful,false,10.21223/P3/LQOT7Z,catalogue_clone_summary
