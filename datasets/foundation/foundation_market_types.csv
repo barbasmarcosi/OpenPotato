@@ -1,5 +1,6 @@
 market_type,fdc_id,nutrient,unit,amount_per_100g,status,loq,data_points,source_id
-russet,2346401,energy_kcal,kcal,,not_reported,,,USDA_FOUNDATION_2026_2346401_N_1008
+russet,2346401,energy_atwater_general_kcal,kcal,83.42,observed,,,USDA_FOUNDATION_2026_2346401_N_2047
+russet,2346401,energy_atwater_specific_kcal,kcal,80.9523625,observed,,,USDA_FOUNDATION_2026_2346401_N_2048
 russet,2346401,protein,g,2.27375,observed,,,USDA_FOUNDATION_2026_2346401_N_1003
 russet,2346401,total_lipid,g,0.36,observed,,8,USDA_FOUNDATION_2026_2346401_N_1004
 russet,2346401,carbohydrate,g,17.77125,observed,,,USDA_FOUNDATION_2026_2346401_N_1005
@@ -16,7 +17,8 @@ russet,2346401,folate_dfe,ug_DFE,,not_reported,,,USDA_FOUNDATION_2026_2346401_N_
 russet,2346401,vitamin_e,mg,,not_reported,,,USDA_FOUNDATION_2026_2346401_N_1109
 russet,2346401,vitamin_b12,ug,,not_reported,,,USDA_FOUNDATION_2026_2346401_N_1178
 russet,2346401,vitamin_d,ug,,not_reported,,,USDA_FOUNDATION_2026_2346401_N_1114
-red,2346402,energy_kcal,kcal,,not_reported,,,USDA_FOUNDATION_2026_2346402_N_1008
+red,2346402,energy_atwater_general_kcal,kcal,75.5575,observed,,,USDA_FOUNDATION_2026_2346402_N_2047
+red,2346402,energy_atwater_specific_kcal,kcal,73.373425,observed,,,USDA_FOUNDATION_2026_2346402_N_2048
 red,2346402,protein,g,2.0625,observed,,,USDA_FOUNDATION_2026_2346402_N_1003
 red,2346402,total_lipid,g,0.2475,observed,,8,USDA_FOUNDATION_2026_2346402_N_1004
 red,2346402,carbohydrate,g,16.27,observed,,,USDA_FOUNDATION_2026_2346402_N_1005
@@ -33,7 +35,8 @@ red,2346402,folate_dfe,ug_DFE,,not_reported,,,USDA_FOUNDATION_2026_2346402_N_119
 red,2346402,vitamin_e,mg,,not_reported,,,USDA_FOUNDATION_2026_2346402_N_1109
 red,2346402,vitamin_b12,ug,,not_reported,,,USDA_FOUNDATION_2026_2346402_N_1178
 red,2346402,vitamin_d,ug,,not_reported,,,USDA_FOUNDATION_2026_2346402_N_1114
-gold,2346403,energy_kcal,kcal,,not_reported,,,USDA_FOUNDATION_2026_2346403_N_1008
+gold,2346403,energy_atwater_general_kcal,kcal,73.4738,observed,,,USDA_FOUNDATION_2026_2346403_N_2047
+gold,2346403,energy_atwater_specific_kcal,kcal,71.575228,observed,,,USDA_FOUNDATION_2026_2346403_N_2048
 gold,2346403,protein,g,1.8125,observed,,,USDA_FOUNDATION_2026_2346403_N_1003
 gold,2346403,total_lipid,g,0.2638,observed,,8,USDA_FOUNDATION_2026_2346403_N_1004
 gold,2346403,carbohydrate,g,15.9624,observed,,,USDA_FOUNDATION_2026_2346403_N_1005

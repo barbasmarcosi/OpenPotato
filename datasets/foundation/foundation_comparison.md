@@ -4,7 +4,8 @@
 
 | Nutriente | Unidad/100g | Russet | Roja | Dorada | Lectura |
 |---|---|---:|---:|---:|---|
-| energy_kcal | kcal | ND | ND | ND | No informado o censurado |
+| energy_atwater_general_kcal | kcal | 83.42 | 75.5575 | 73.4738 | Comparables en crudo; no inferir causalidad |
+| energy_atwater_specific_kcal | kcal | 80.9523625 | 73.373425 | 71.575228 | Comparables en crudo; no inferir causalidad |
 | protein | g | 2.27375 | 2.0625 | 1.8125 | Comparables en crudo; no inferir causalidad |
 | total_lipid | g | 0.36 | 0.2475 | 0.2638 | Comparables en crudo; no inferir causalidad |
 | carbohydrate | g | 17.77125 | 16.27 | 15.9624 | Comparables en crudo; no inferir causalidad |
