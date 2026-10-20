@@ -26,6 +26,9 @@ jobs:
               "rwanda_diploid":"doi:10.21223/MBBV5A",
               "peru_nine_field_trials":"doi:10.21223/N11QJS",
               "diploid_genetic_gains_replication":"doi:10.21223/9OJPJ7",
+              "peru_la_libertad_xrf":"doi:10.21223/HRLAI0",
+              "peru_huancavelica_xrf":"doi:10.21223/T7JUCL",
+              "peru_apurimac_xrf":"doi:10.21223/DTSA6Y",
           }
           result={}
           def fetch(url):
