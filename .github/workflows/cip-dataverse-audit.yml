@@ -24,6 +24,8 @@ jobs:
               "tetraploid_catalog":"doi:10.21223/P3/LQOT7Z",
               "huancavelica_participatory":"doi:10.21223/P3/8NEIZP",
               "rwanda_diploid":"doi:10.21223/MBBV5A",
+              "peru_nine_field_trials":"doi:10.21223/N11QJS",
+              "diploid_genetic_gains_replication":"doi:10.21223/9OJPJ7",
           }
           result={}
           def fetch(url):
