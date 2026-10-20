@@ -1,0 +1,67 @@
+name: M1 CIP Peru Table 12 public laboratory row inventory
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - ".github/workflows/cip-peru-table12-inventory.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect verified PUBLIC Dataverse Table 12 file 6980, every row
+        run: |
+          python - <<'PY'
+          import collections,csv,hashlib,io,json,pathlib,urllib.request
+          id=6980
+          url=f"https://data.cipotato.org/api/access/datafile/{id}"
+          with urllib.request.urlopen(urllib.request.Request(url,headers={"User-Agent":"OpenPotato-research-M1/0.1"}),timeout=45) as f:
+              raw=f.read()
+              mime=f.headers.get("Content-Type","")
+          sha=hashlib.sha256(raw).hexdigest()
+          md5=hashlib.md5(raw).hexdigest()
+          if sha!="0f33b843e286eab15ad71c6c110592adc60709997d75b2b1c5f7365ca99f6152" or md5!="b6335e33f8bc8ab3309a56904083911a":
+              raise ValueError("Public CIP Table 12 export changed: audit it before integration")
+          if not mime.startswith("text/tab-separated-values"):
+              raise ValueError("Unexpected content type")
+          rdr=csv.DictReader(io.StringIO(raw.decode("utf-8-sig")),delimiter="\t")
+          expected={"INSTN","BREEDERCODE","nFEDW","MeanFEDW","SdFEDW","MinFEDW","MaxFEDW",
+                    "nZNDW","MeanZNDW","SdZNDW","MinZNDW","MaxZNDW","nTglyFW","MeanTglyFW"}
+          if not expected.issubset(set(rdr.fieldnames or [])):
+              raise ValueError(f"Required fields missing {expected-set(rdr.fieldnames or [])}")
+          records=list(rdr)
+          out=[]
+          for line,record in enumerate(records,2):
+              if None in record or any(x is None for x in record.values()):
+                  raise ValueError(f"Ragged row: {line}")
+              fields={name:record[name] for name in [
+                  "ORD","INSTN","BREEDERCODE","nFEDW","MeanFEDW","SdFEDW",
+                  "nZNDW","MeanZNDW","SdZNDW","nDM","MeanDM",
+                  "nTTYNA","MeanTTYNA","nTglyFW","MeanTglyFW"]}
+              out.append({"tsv_line":line,**fields})
+              print("TABLE12_ROW",json.dumps(out[-1],ensure_ascii=False),flush=True)
+          names=[x["INSTN"].strip() for x in records]
+          count=collections.Counter(x for x in names if x)
+          manifest={"doi":"10.21223/N11QJS","file_id":id,"sha256":sha,"export_md5":md5,
+                    "original_metadata_md5":"6ba7f982da7cc2073693cf0b1e13f253",
+                    "records":len(records),"columns":len(rdr.fieldnames or []),
+                    "empty_instn_rows":[r["tsv_line"] for r in out if not r["INSTN"].strip()],
+                    "duplicate_identifiers":{k:v for k,v in count.items() if v>1},
+                    "all_rows":out}
+          pathlib.Path("/tmp/table12-inventory").mkdir(parents=True,exist_ok=True)
+          pathlib.Path("/tmp/table12-inventory/public_table12_rows.json").write_text(
+              json.dumps(manifest,indent=2,ensure_ascii=False),encoding="utf-8")
+          print("TABLE12_SUMMARY",json.dumps({k:v for k,v in manifest.items() if k!="all_rows"},ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m1-cip-peru-public-table12-row-inventory
+          retention-days: 30
+          path: /tmp/table12-inventory/
