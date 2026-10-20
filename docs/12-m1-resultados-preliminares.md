@@ -1,3 +1,5 @@
+> **DOCUMENTO HISTÓRICO:** los resultados aquí fueron calculados antes de descargar directamente el USDA. Se verificaron los registros oficiales y se publicaron dos preparaciones en [nuevo informe](13-usda-verificacion-primaria.md). Este registro permanece para trazabilidad, no como estado final.
+
 # OP-M1-001 — resultados preliminares verificados por CI
 
 **Fecha:** 2026-10-20. **Evidencia de ejecución:** [GitHub Actions #39363512441](https://github.com/barbasmarcosi/OpenPotato/actions/runs/39363512441) sobre commit [3d7a1d4](https://github.com/barbasmarcosi/OpenPotato/commit/3d7a1d4e195135b801ce5b472c8bf9590a2b7083). **Estado:** modelo computacional validado técnicamente con 10 pruebas; calidad de la transcripción científica **provisional** hasta obtener fuente USDA oficial.

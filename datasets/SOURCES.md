@@ -1,3 +1,5 @@
+> **Actualización 2026-10-20:** La fuente primaria USDA SR Legacy ya fue descargada y verificada. El motor usa por defecto [datasets/official/potato_fdc_170438_usda.csv](official/potato_fdc_170438_usda.csv). Consultar [verificación y comparación](../docs/13-usda-verificacion-primaria.md) y [manifest de procedencia](official/provenance.json). Lo que sigue documenta la transcripción histórica inicial y **no** constituye el estado actual de la fuente.
+
 # Fuentes de OP-M1-001 y calidad de transcripción
 
 ## Alimento

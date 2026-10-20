@@ -1,3 +1,5 @@
+> **ACTUALIZACIÓN 2026-10-20:** este documento registra la implementación inicial; la entrada actual por defecto es la ficha oficial USDA. Ver [validación y resultados oficiales](13-usda-verificacion-primaria.md).
+
 # OP-M1-001: primera implementación y análisis
 
 **Estado: implementación inicial entregada en rama de investigación; resultados definitivos sujetos a verificación de CI y transcripción USDA oficial.**
