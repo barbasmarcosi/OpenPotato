@@ -23,7 +23,7 @@ def fixture(path, *, missing_type=False, duplicate=False, wrong_unit=False, loq=
                 for name,(nid,unit) in TARGETS.items()]
     results=[]
     for row in foods:
-        for nid,val in [(1008,"75"),(1089,"0.33"),(1095,"0.22"),(1162,"0")]:
+        for nid,val in [(2047,"75"),(1089,"0.33"),(1095,"0.22"),(1162,"0")]:
             is_below=loq and nid==1162
             results.append({"fdc_id":row["fdc_id"],"nutrient_id":str(nid),
                             "amount":val,"loq":"0.05" if is_below else "",
@@ -41,10 +41,12 @@ class FoundationImporterTests(unittest.TestCase):
             root=Path(temp);fixture(root/"data.zip",loq=True)
             meta=extract(root/"data.zip",root/"result")
             self.assertEqual(len(meta["foods"]),3)
-            rows=list(csv.DictReader((root/"result"/"foundation_market_types.csv").open()))
+            with (root/"result"/"foundation_market_types.csv").open() as handle:
+                rows=list(csv.DictReader(handle))
             self.assertEqual(len(rows),3*len(TARGETS))
             indexed={(r["market_type"],r["nutrient"]):r for r in rows}
             self.assertEqual(indexed["red","iron"]["amount_per_100g"],"0.33")
+            self.assertEqual(indexed["gold","energy_atwater_general_kcal"]["amount_per_100g"],"75")
             self.assertEqual(indexed["russet","vitamin_c"]["status"],"below_quantification")
             self.assertEqual(indexed["russet","vitamin_c"]["amount_per_100g"],"")
             self.assertEqual(indexed["gold","vitamin_b12"]["status"],"not_reported")
