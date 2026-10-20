@@ -1,0 +1,60 @@
+name: M1 CIP 29-clone catalogue reproducibility
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/cip_clone_catalog.py"
+      - "tests/test_cip_clone_catalog.py"
+      - ".github/workflows/cip-catalogue.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  original-catalogue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned legacy XLS reader (research import only)
+        run: python -m pip install xlrd==2.0.2
+      - name: Offline test suite
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Fetch two public CC BY 4.0 originals and verify hashes
+        run: |
+          curl -fsSL --retry 2 --max-time 50 "https://data.cipotato.org/api/access/datafile/2211" -o /tmp/cip-clones.xls
+          curl -fsSL --retry 2 --max-time 50 "https://data.cipotato.org/api/access/datafile/2212" -o /tmp/cip-dictionary.xls
+          echo "58706bfb9052220dccc89412d14033c750e7911861d03b5e6c4c5871b2135226  /tmp/cip-clones.xls" | sha256sum -c -
+          echo "905c0cf39f4ad1d2b9d34dfb698440f49304992d6370f3ec8a76afbdb7298525  /tmp/cip-dictionary.xls" | sha256sum -c -
+      - name: Analyze original 29 clone-level records
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.cip_clone_catalog --xls /tmp/cip-clones.xls --dictionary /tmp/cip-dictionary.xls --out /tmp/cip-29
+          cat /tmp/cip-29/cip_29_clones_report.md
+          cat /tmp/cip-29/cip_29_clones_provenance.json
+      - name: Archive research outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: cip-29-clones-open-data-derivatives
+          retention-days: 30
+          path: /tmp/cip-29/
+      - name: Commit verified CC BY 4.0 derivative data with attribution
+        if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+        run: |
+          mkdir -p datasets/cip_catalogue
+          cp /tmp/cip-29/cip_29_clones_catalogue.csv /tmp/cip-29/cip_29_clones_report.md             /tmp/cip-29/cip_29_clones_provenance.json datasets/cip_catalogue/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/cip_catalogue/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1): pin licensed 29-clone CIP catalogue derivatives"
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi
