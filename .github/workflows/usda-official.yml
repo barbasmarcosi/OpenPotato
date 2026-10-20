@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   official-usda-source:
@@ -58,3 +58,15 @@ jobs:
             /tmp/usda-official/
             /tmp/m1-usda-438/
             /tmp/m1-usda-440/
+      - name: Versionar fichas oficiales verificadas en rama de investigación
+        if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+        run: |
+          mkdir -p datasets/official
+          cp /tmp/usda-official/*.csv /tmp/usda-official/provenance.json datasets/official/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/official/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(m1): pin verified official USDA SR Legacy nutrient records"
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi
