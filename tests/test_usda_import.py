@@ -47,6 +47,12 @@ class TestOfficialUSDA(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);fixture(root/"bad.zip",duplicate=True)
             with self.assertRaisesRegex(ValueError,"duplicate"):extract(root/"bad.zip",root/"out")
+    def test_changed_official_zip_is_not_silently_accepted(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);fixture(root/"sample.zip")
+            with self.assertRaisesRegex(ValueError,"checksum"):
+                extract(root/"sample.zip",root/"out",expected_archive_sha="0"*64)
+
     def test_missing_food_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);fixture(root/"bad.zip",missing=True)
