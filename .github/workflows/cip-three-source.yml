@@ -1,0 +1,43 @@
+name: M1 CIP three-source documentary audit
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/cip_three_source_audit.py"
+      - "tests/test_cip_three_source_audit.py"
+      - ".github/workflows/cip-three-source.yml"
+      - "datasets/cip_peru_summary/*.csv"
+      - "datasets/cip_catalogue/*.csv"
+      - "datasets/cultivars/*.csv"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile-public-summaries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run ALL offline scientific tests
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Reconcile three already audited public derivatives
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.cip_three_source_audit --out /tmp/m1-08
+          cat /tmp/m1-08/three_source_report.md
+          cat /tmp/m1-08/three_source_provenance.json
+      - name: Archive provenance and reconciled source-specific summaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-08-three-source-audit
+          retention-days: 30
+          path: /tmp/m1-08/
