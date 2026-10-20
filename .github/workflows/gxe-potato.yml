@@ -35,8 +35,8 @@ jobs:
         env:
           PYTHONPATH: .:src
         run: |
-          SHA="$(sha256sum /tmp/tai-potato.csv | cut -d ' ' -f1)"
-          python -m scripts.potato_gxe --csv /tmp/tai-potato.csv             --sha256 "$SHA" --out /tmp/potato-gxe
+          echo "6a758579b091050f02da6a352742201a73d5e3bd7ee2c7624f2a7e9e141a9055  /tmp/tai-potato.csv" | sha256sum -c -
+          python -m scripts.potato_gxe --csv /tmp/tai-potato.csv --sha256 "6a758579b091050f02da6a352742201a73d5e3bd7ee2c7624f2a7e9e141a9055" --out /tmp/potato-gxe
           cat /tmp/potato-gxe/gxE_report.md
       - name: Guardar artefactos de la ejecución
         uses: actions/upload-artifact@v4
