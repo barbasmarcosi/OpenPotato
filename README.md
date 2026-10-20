@@ -32,6 +32,7 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 | [Herramientas y método](docs/10-herramientas-y-metodologia.md) | Stack inicial, alternativas y condiciones para activar bioinformática e IA |
 | [USDA — verificación primaria](docs/13-usda-verificacion-primaria.md) | Fichas oficiales de dos preparaciones hervidas |
 | [USDA Foundation — tipos comerciales](docs/14-foundation-tipos-comerciales.md) | Tres tipos crudos, datos y método para comparar variación descriptiva |
+| [Zinc — contraste genético/agronómico](docs/15-biofortificacion-zinc-comparacion.md) | Estudio agrícola primario 2026 y nueva hipótesis alternativa |
 | [M1 implementación](docs/11-m1-primera-ejecucion.md) | Ejecutar análisis y pruebas sin dependencias ni internet |
 | [M1 resultados preliminares](docs/12-m1-resultados-preliminares.md) | Resultados de CI, cálculos y limitaciones |
 | [Registro estructurado](research/evidence-register.csv) | Evidencia bibliográfica inicial apta para análisis |
@@ -39,7 +40,7 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 ## Estado de resultados
 
 - **Completado técnicamente:** modelo de cobertura nutricional (2 perfiles de referencia), controles de unidades y faltantes, extracción directa USDA, comparación de dos preparaciones y tres tipos comerciales, procedencia SHA-256, CI offline.
-- **En curso científicamente:** separar incertidumbre de muestreo, diferencias entre variedades genéticas reales y efectos del procesamiento/ambiente; revisión externa de interpretación y selección de nuevos datasets.
+- **En curso científicamente:** separar incertidumbre de muestreo, diferencias entre variedades genéticas reales y efectos del procesamiento/ambiente; revisión externa de interpretación y selección de nuevos datasets. Próximo trabajo: [variabilidad por muestra, issue #6](https://github.com/barbasmarcosi/OpenPotato/issues/6).
 - **No iniciado:** biofortificación experimental, simulación genética de cultivares, estudios de absorción humana y evaluación multisitio.
 
 ## Primera entrega verificable
