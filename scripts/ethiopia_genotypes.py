@@ -76,7 +76,7 @@ def read_rows(path: Path, expected_sha: str = SOURCE_SHA256) -> list[dict]:
             # Every relevant cell begins with a numeric mean; followed by
             # a superscript Tukey-letter grouping that MUST NOT be interpreted
             # as a second measurement.
-            token = re.match(r"^([0-9]+(?:\.[0-9]+)?)(?:\s|$)",cells[index])
+            token = re.match(r"^([0-9]+(?:\.[0-9]+)?)",cells[index])
             if not token:
                 raise ValueError(f"Missing published mean in {name}: {cells[index]}")
             numbers.append(decimal(token.group(1)))
