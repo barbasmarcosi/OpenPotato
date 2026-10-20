@@ -19,10 +19,10 @@ jobs:
           import csv,io,hashlib,json,os,urllib.request
           # IDs and MD5 from public CIP Dataverse metadata version 1.0.
           files={
-            "clones_selected":{"id":6979,"md5":"170766ab8217f2b6d38f62c646616268"},
-            "analysis_correlation":{"id":6983,"md5":"e3a5d10bcf64627bc1a5ffa0152907ff"},
-            "dry_matter_lab":{"id":6980,"md5":"6ba7f982da7cc2073693cf0b1e13f253"},
-            "soils_nine_sites":{"id":6970,"md5":"511885a4ab3215d635fe32c92cbfb815"},
+            "clones_selected":{"id":6979,"md5":"170766ab8217f2b6d38f62c646616268","export_md5":"03b886a403f6f313179e19852f4f5724"},
+            "analysis_correlation":{"id":6983,"md5":"e3a5d10bcf64627bc1a5ffa0152907ff","export_md5":"cca9d327251e29f15ce615be35d53777"},
+            "dry_matter_lab":{"id":6980,"md5":"6ba7f982da7cc2073693cf0b1e13f253","export_md5":"b6335e33f8bc8ab3309a56904083911a"},
+            "soils_nine_sites":{"id":6970,"md5":"511885a4ab3215d635fe32c92cbfb815","export_md5":"02263b5b2256ab1d827716b93dd0888a"},
           }
           report={}
           for label,record in files.items():
@@ -32,12 +32,9 @@ jobs:
                   raw=response.read()
                   mime=response.headers.get('Content-Type','')
               digest_md5=hashlib.md5(raw).hexdigest()
-              if digest_md5!=record["md5"]:
-                  print("HASH_MISMATCH",label,"expected",record["md5"],"actual",digest_md5,
-                        "mime",mime,"size",len(raw),"prefix",repr(raw[:70]),flush=True)
-                  report[label]={"file_id":record["id"],"status":"checksum_mismatch_reject","actual_md5":digest_md5,
-                    "expected_md5":record["md5"],"content_type":mime}
-                  continue
+              if digest_md5!=record["export_md5"] or not mime.startswith("text/tab-separated-values"):
+                  raise ValueError(f'File {label} changed from audited Dataverse TSV export (MD5 or MIME)')
+              print("EXPORT_CHECK",label,"metadata_MD5",record["md5"],"export_MD5",digest_md5,flush=True)
               text=raw.decode("utf-8-sig")
               data=list(csv.reader(io.StringIO(text),delimiter="\t"))
               lengths={}
