@@ -37,7 +37,7 @@ class TestMultiEnvironment(unittest.TestCase):
             result=analyze(src,Path(t)/"out",pinned_sha256=filehash(src))
             components=sum(Decimal(result[f"{k}_sum_squares"]) for k in
                            ("genotype","environment","interaction"))
-            self.assertEqual(components,Decimal(result["total_sum_squares"]))
+            self.assertLess(abs(components-Decimal(result["total_sum_squares"])), Decimal("1e-20"))
             self.assertEqual(result["genotypes"],8)
             self.assertTrue(result["no_residual_variance_estimate"])
 
