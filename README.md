@@ -2,7 +2,7 @@
 
 **Investigación abierta para mejorar la nutrición humana mediante papas más nutritivas, productivas, seguras y accesibles.**
 
-> Estado: **M1-04 — análisis computacional de genotipos identificados (20-10-2026)**. Datos primarios versionados: USDA (2 preparaciones hervidas, 3 tipos comerciales crudos y 96 observaciones analíticas) + artículo científico con **45 genotipos de papa y 15 candidatos de Pareto descriptivo** (Holetta, Etiopía, 2019). Ningún ensayo biológico propio, secuenciación genética ni validación multientorno realizada.
+> Estado: **M1-05 — método multientorno de rendimiento validado (20-10-2026)**. Se mantiene el corpus previo USDA y Holetta. Nuevo: análisis de 8 genotipos × 6 ambientes de un ensayo histórico real **solo de rendimiento**, 19 cambios de orden entre 28 pares y verificación del diseño; **71 pruebas automatizadas aprobadas**. Seguimos SIN validación multientorno de hierro/zinc, ensayos biológicos propios ni predicciones genéticas.
 
 ## La pregunta central
 
@@ -34,6 +34,8 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 | [USDA Foundation — tipos comerciales](docs/14-foundation-tipos-comerciales.md) | Tres tipos crudos, datos y método para comparar variación descriptiva |
 | [M1-03 — dispersión en muestras reales](docs/16-variabilidad-muestras-usda.md) | Reconstrucción de 24 muestras, 96 análisis y límites de generalización |
 | [M1-04 — genotipos y compromisos agronómicos](docs/17-genotipos-ethiopia-hierro-zinc.md) | 45 genotipos, Fe/Zn, rendimiento fresco, materia seca y Pareto explicable |
+| [M1-05 — análisis multientorno y calidad](docs/18-m1-05-multiambiente-calidad.md) | Ensayo multisitio histórico de rendimiento y control de entrada para Fe/Zn por parcela |
+| [Fuentes multientorno candidatas](research/multienvironment-candidates.csv) | Catálogo con estado de acceso, granularidad y licencias pendientes |
 | [Zinc — contraste genético/agronómico](docs/15-biofortificacion-zinc-comparacion.md) | Estudio agrícola primario 2026 y nueva hipótesis alternativa |
 | [M1 implementación](docs/11-m1-primera-ejecucion.md) | Ejecutar análisis y pruebas sin dependencias ni internet |
 | [M1 resultados preliminares](docs/12-m1-resultados-preliminares.md) | Resultados de CI, cálculos y limitaciones |
@@ -44,7 +46,8 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 - **Completado técnicamente:** modelo de cobertura nutricional (2 perfiles de referencia), controles de unidades y faltantes, extracción directa USDA, comparación de dos preparaciones y tres tipos comerciales, procedencia SHA-256, CI offline.
 - **Completado para esta cohorte comercial:** variabilidad descriptiva de ocho muestras por tipo para Fe, Zn, K y vitamina C; conciliación con medianas y rangos del USDA. Compras limitadas a Virginia (EE. UU.) en 2022, no un ensayo genético.
 - **Completado computacionalmente (M1-04):** extracción directa de 45 genotipos identificados de un ensayo publicado con tres repeticiones en un solo ambiente, 15 no dominados en Fe/Zn/rendimiento según medias y cálculos dimensionales de masa mineral/ha puramente teórica.
-- **Pendiente científicamente:** ensayos con identidad del material y datos por parcela replicados en múltiples ambientes, estabilidad, procesamiento, biodisponibilidad, límites de seguridad y revisión experta. Seguimiento: [issue #6](https://github.com/barbasmarcosi/OpenPotato/issues/6).
+- **Validado metodológicamente (M1-05):** descomposición G, E y G×E descriptiva sobre 48 medias de rendimiento histórico de papa; control formal de estructura para recibir Fe/Zn y rendimiento de parcelas reales, sin datos sintéticos convertidos en hallazgos.
+- **Pendiente científicamente:** ensayos reales con Fe/Zn y rendimiento por parcela repetidos en múltiples ambientes, verificación de estabilidad, procesamiento, biodisponibilidad y seguridad. Seguimiento: [issue #7](https://github.com/barbasmarcosi/OpenPotato/issues/7).
 - **No iniciado:** biofortificación experimental, simulación genética de cultivares, estudios de absorción humana y evaluación multisitio.
 
 ## Primera entrega verificable
