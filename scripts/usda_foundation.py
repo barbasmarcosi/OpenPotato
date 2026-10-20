@@ -72,18 +72,33 @@ def extract(archive_path: Path, output_dir: Path, expected_sha256: str | None = 
         raise ValueError("Foundation archive SHA-256 mismatch")
     with zipfile.ZipFile(archive_path) as archive:
         by_description = {name.casefold():kind for kind, name in EXPECTED.items()}
-        found = {}
+        versions = {kind: [] for kind in EXPECTED}
         for entry in table(archive, "food.csv"):
             kind = by_description.get(entry["description"].strip().casefold())
             if kind is None:
                 continue
-            if kind in found:
-                raise ValueError(f"More than one Foundation record for {kind}; select a version explicitly")
             if entry["data_type"].casefold() not in ("foundation_food", "foundation"):
                 raise ValueError(f"{kind} is not Foundation Food")
-            found[kind] = {"fdc_id": entry["fdc_id"], "description": entry["description"]}
-        if set(found) != set(EXPECTED):
-            raise ValueError(f"Missing market classes: {set(EXPECTED) - set(found)}")
+            versions[kind].append({
+                "fdc_id": entry["fdc_id"],
+                "description": entry["description"],
+                "publication_date": entry.get("publication_date", "").strip(),
+            })
+        if any(not versions[kind] for kind in EXPECTED):
+            raise ValueError(f"Missing market classes: {[k for k,v in versions.items() if not v]}")
+        found = {}
+        for kind, entries in versions.items():
+            if len(entries) == 1:
+                found[kind] = entries[0]
+                continue
+            if any(not x["publication_date"] for x in entries):
+                raise ValueError(f"Historical duplicates without publication dates: {kind}")
+            dates = sorted({x["publication_date"] for x in entries})
+            latest = dates[-1]
+            candidates = [x for x in entries if x["publication_date"] == latest]
+            if len(candidates) != 1:
+                raise ValueError(f"More than one Foundation record at latest publication date for {kind}: {candidates}")
+            found[kind] = candidates[0]
         by_fdc = {info["fdc_id"]:kind for kind, info in found.items()}
         wanted = {nid for nid, unit in TARGETS.values()}
         nutrient_meta = {int(n["id"]): n for n in table(archive, "nutrient.csv")
@@ -148,6 +163,8 @@ def extract(archive_path: Path, output_dir: Path, expected_sha256: str | None = 
         "archive_sha256": archive_hash,
         "csv_sha256": filehash(csv_path),
         "foods": found,
+        "historical_versions": versions,
+        "selection_rule": "most recent publication_date; reject ties",
         "categories": "market types; no confirmation of genetic cultivar identity",
         "form": "raw potato flesh without skin; NOT cooked",
         "interpretation": "Composition from published USDA data; not a randomized experiment or proof of genetics",
