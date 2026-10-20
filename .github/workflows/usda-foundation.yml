@@ -6,6 +6,8 @@ on:
     paths:
       - "scripts/usda_foundation.py"
       - "tests/test_usda_foundation.py"
+      - "scripts/foundation_variability.py"
+      - "tests/test_variability.py"
       - ".github/workflows/usda-foundation.yml"
   workflow_dispatch:
 
@@ -39,12 +41,18 @@ jobs:
           python -m scripts.usda_foundation --zip /tmp/fdc_foundation_2026.zip --output-dir /tmp/foundation --expected-sha256 70457ee9d9342f43bda2010318c85f04210c689fdeb9cd2da4c513b0e8dbc655
           cat /tmp/foundation/foundation_comparison.md
           cat /tmp/foundation/foundation_provenance.json
+      - name: Reconstruir 24 muestras USDA y sus resultados analíticos
+        run: |
+          PYTHONPATH=.:src python -m scripts.foundation_variability             --zip /tmp/fdc_foundation_2026.zip --output-dir /tmp/foundation-variability
+          cat /tmp/foundation-variability/retail_sample_report.md
       - name: Publicar artefactos auditables de Foundation
         uses: actions/upload-artifact@v4
         with:
           name: m1-foundation-usda-2026
           retention-days: 30
-          path: /tmp/foundation/
+          path: |
+            /tmp/foundation/
+            /tmp/foundation-variability/
       - name: Fijar snapshots oficiales en la rama (sin sobrescribir manualmente)
         if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
         run: |
@@ -52,7 +60,9 @@ jobs:
           cp /tmp/foundation/foundation_market_types.csv /tmp/foundation/foundation_comparison.md /tmp/foundation/foundation_provenance.json datasets/foundation/
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add datasets/foundation/
+          mkdir -p datasets/variability
+          cp /tmp/foundation-variability/retail_sample_*.csv /tmp/foundation-variability/retail_sample_*.json /tmp/foundation-variability/retail_sample_report.md datasets/variability/
+          git add datasets/foundation/ datasets/variability/
           if ! git diff --cached --quiet; then
             git commit -m "data(m1): pin official USDA Foundation market-type potato data"
             git push origin HEAD:research/m1-nutrition-baseline
