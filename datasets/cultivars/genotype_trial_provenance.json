@@ -1,0 +1,20 @@
+{
+  "derived_csv_sha256": "5542aded6b4487016582dfc984308d0d8de779f388edd6006efe9525cc594bb0",
+  "design": "published means from three-replication single-site trial; not plot-level observations",
+  "doi": "10.3390/plants12142625",
+  "genotypes": 45,
+  "limitations": [
+    "Genotype-specific means from only one location/year, NOT multi-environment validation.",
+    "No confidence intervals or genotype significance tests can be reconstructed from genotype means alone.",
+    "Pareto dominance is descriptive of reported point estimates; not statistical superiority.",
+    "Nutrient mass/ha is theoretical before losses, edible fraction, processing or human bioavailability.",
+    "Do not pool with USDA fresh 100-g concentrations, or infer cultivar registration or deployability."
+  ],
+  "pareto_candidates": 15,
+  "site": "Holetta, Ethiopia",
+  "source": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10383430/fullTextXML",
+  "source_sha256": "f3afe300384cd6f7b0c24bf44dbe24ebad8ef1de6ceefcd414845794e6aacd78",
+  "table_id": "plants-12-02625-t002",
+  "units": "fresh yield kg/m2, dry matter percentage, Fe/Zn mg per kg DRY; mass potential g/ha theoretical",
+  "year": 2019
+}
