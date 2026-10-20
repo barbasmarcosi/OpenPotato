@@ -34,3 +34,20 @@ jobs:
           test -s /tmp/openpotato-m1/manifest.json
           test -s /tmp/openpotato-m1/report.md
           cat /tmp/openpotato-m1/report.md
+      - name: Comparar fichas oficiales con hashes y generar informe
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m openpotato.compare --output /tmp/openpotato-comparison
+          test -s /tmp/openpotato-comparison/preparation_comparison.csv
+          test -s /tmp/openpotato-comparison/comparison.md
+          cat /tmp/openpotato-comparison/comparison.md
+      - name: Archivar informes computacionales
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-nutritional-coverage-and-preparations
+          retention-days: 30
+          path: |
+            /tmp/openpotato-m1/
+            /tmp/openpotato-comparison/
+
