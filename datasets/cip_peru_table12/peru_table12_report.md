@@ -2,7 +2,7 @@
 
 Archivo Dataverse 6980; https://doi.org/10.21223/N11QJS.
 
-- 34 materiales = 30 clones seleccionados + 4 controles.
+- 34 materiales = 30 clones evaluados + 4 controles.
 - 68 registros Fe/Zn con n, media, SD y rango **publicados**.
 - Los 28 registros de los 14 materiales de Tabla 16 son **idénticos**, no réplicas independientes.
 - 7 filas no materiales trazadas (4 vacías + 3 resúmenes generales).
