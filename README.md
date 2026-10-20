@@ -2,7 +2,7 @@
 
 **Investigación abierta para mejorar la nutrición humana mediante papas más nutritivas, productivas, seguras y accesibles.**
 
-> Estado: **M1 en ejecución (20-10-2026)**; fuente primaria USDA SR Legacy 2018 descargada, validada y versionada. El código analiza dos preparaciones, con pruebas de CI y trazabilidad SHA-256. Aún NO se completó revisión nutricional independiente ni hay ensayos biológicos o variedades nuevas.
+> Estado: **M1 en ejecución (20-10-2026)**. Dos conjuntos primarios USDA ya están normalizados y versionados: **SR Legacy (papa hervida, 2 preparaciones)** y **Foundation Foods (papa cruda, 3 tipos comerciales)**. Última batería automatizada: 32 pruebas aprobadas; no hay ensayos biológicos, cultivares nuevos ni validación nutricional independiente.
 
 ## La pregunta central
 
@@ -30,10 +30,17 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 | [Colaboración](docs/08-colaboracion.md) | Cómo participar y potenciales alianzas |
 | [Decisiones](docs/09-registro-de-decisiones.md) | Decisiones arquitectónicas y científicas |
 | [Herramientas y método](docs/10-herramientas-y-metodologia.md) | Stack inicial, alternativas y condiciones para activar bioinformática e IA |
-| [USDA — verificación primaria](docs/13-usda-verificacion-primaria.md) | Fichas oficiales, comparación y resultados iniciales |
+| [USDA — verificación primaria](docs/13-usda-verificacion-primaria.md) | Fichas oficiales de dos preparaciones hervidas |
+| [USDA Foundation — tipos comerciales](docs/14-foundation-tipos-comerciales.md) | Tres tipos crudos, datos y método para comparar variación descriptiva |
 | [M1 implementación](docs/11-m1-primera-ejecucion.md) | Ejecutar análisis y pruebas sin dependencias ni internet |
 | [M1 resultados preliminares](docs/12-m1-resultados-preliminares.md) | Resultados de CI, cálculos y limitaciones |
 | [Registro estructurado](research/evidence-register.csv) | Evidencia bibliográfica inicial apta para análisis |
+
+## Estado de resultados
+
+- **Completado técnicamente:** modelo de cobertura nutricional (2 perfiles de referencia), controles de unidades y faltantes, extracción directa USDA, comparación de dos preparaciones y tres tipos comerciales, procedencia SHA-256, CI offline.
+- **En curso científicamente:** separar incertidumbre de muestreo, diferencias entre variedades genéticas reales y efectos del procesamiento/ambiente; revisión externa de interpretación y selección de nuevos datasets.
+- **No iniciado:** biofortificación experimental, simulación genética de cultivares, estudios de absorción humana y evaluación multisitio.
 
 ## Primera entrega verificable
 
