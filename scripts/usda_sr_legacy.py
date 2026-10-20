@@ -5,6 +5,7 @@ from decimal import Decimal
 from pathlib import Path
 
 USDA_URL = "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip"
+PINNED_ARCHIVE_SHA256 = "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0"
 FOOD_NAMES = {"170438": "Potatoes, boiled, cooked in skin, flesh, without salt",
               "170440": "Potatoes, boiled, cooked without skin, flesh, without salt"}
 # FoodData Central nutrient IDs (different from legacy NDB nutrient numbers).
@@ -42,8 +43,11 @@ def csv_rows(archive, name):
         with io.TextIOWrapper(stream, encoding="utf-8-sig", newline="") as text:
             yield from csv.DictReader(text)
 
-def extract(archive_path, output_dir):
+def extract(archive_path, output_dir, expected_archive_sha=None):
     archive_path, output_dir = Path(archive_path), Path(output_dir)
+    source_sha = sha256(archive_path)
+    if expected_archive_sha is not None and source_sha != expected_archive_sha:
+        raise ValueError("USDA archive checksum changed; audit release before proceeding")
     with zipfile.ZipFile(archive_path) as z:
         foods = {r["fdc_id"]:r for r in csv_rows(z,"food.csv") if r["fdc_id"] in FOOD_NAMES}
         if foods.keys() != FOOD_NAMES.keys():
@@ -92,7 +96,7 @@ def extract(archive_path, output_dir):
                 writer.writerow([label,unit,val if val is not None else "",state,
                                  f"USDA_SR_2018_{fid}_N_{nid}" if nid is not None else f"USDA_SR_2018_{fid}_UNRESOLVED"])
         files[fid]={"description":name,"filename":output.name,"sha256":sha256(output),"reported_nutrients":len(values[fid])}
-    manifest={"source_url":USDA_URL,"release":"SR Legacy April 2018","archive_sha256":sha256(archive_path),
+    manifest={"source_url":USDA_URL,"release":"SR Legacy April 2018","archive_sha256":source_sha,
               "records":files,"no_imputation":True,
               "caveat":"Historical analytical/calculated values; not cultivar-specific or proof of bioavailability."}
     (output_dir/"provenance.json").write_text(json.dumps(manifest,indent=2,sort_keys=True)+"\n",encoding="utf-8")
@@ -102,7 +106,9 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--zip",type=Path,required=True)
     parser.add_argument("--output-dir",type=Path,required=True)
+    parser.add_argument("--no-pinned-check",action="store_true",help="only after separately auditing an alternate ZIP release")
     args=parser.parse_args()
-    print(json.dumps(extract(args.zip,args.output_dir),indent=2))
+    expected=None if args.no_pinned_check else PINNED_ARCHIVE_SHA256
+    print(json.dumps(extract(args.zip,args.output_dir,expected_archive_sha=expected),indent=2))
 
 if __name__=="__main__": main()
