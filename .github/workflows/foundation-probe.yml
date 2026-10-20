@@ -46,6 +46,17 @@ jobs:
                   if any(val in targets for val in row.values()):
                       matches.append(row)
               print("INPUT_LINKS",len(matches),matches[:12])
+          linked_ids={r['fdc_of_input_food'] for r in matches}
+          print("LINKED_SAMPLES",len(linked_ids),sorted(linked_ids)[:24])
+          for name in ('food.csv','sample_food.csv','food_nutrient.csv','acquisition_samples.csv','market_acquisition.csv'):
+              rows=[r for r in get(name) if
+                any(v in linked_ids for v in r.values())]
+              print("FOLLOW_LINK",name,"count",len(rows),"sample",rows[:10])
+          sample_nutrients={}
+          for row in get('food_nutrient.csv'):
+              if row['fdc_id'] in linked_ids and row['nutrient_id'] in ('1089','1095','1162','1092'):
+                  sample_nutrients[(row['fdc_id'],row['nutrient_id'])]=row
+          print("INDIVIDUAL_NUTRIENTS",len(sample_nutrients),"sample",list(sample_nutrients.items())[:15])
           for name in ('sample_food.csv','sub_sample_food.csv','sub_sample_result.csv','market_acquisition.csv','acquisition_samples.csv','agricultural_samples.csv'):
               if name not in tables: continue
               rows=list(get(name))
