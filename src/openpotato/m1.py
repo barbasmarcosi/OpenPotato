@@ -15,7 +15,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_FOOD = ROOT / "datasets" / "potato_fdc_170438_proxy.csv"
+DEFAULT_FOOD = ROOT / "datasets" / "official" / "potato_fdc_170438_usda.csv"
 DEFAULT_REFERENCES = ROOT / "datasets" / "adult_references_31_50.csv"
 ALLOWED_UNITS = {"kcal", "g", "mg", "ug", "ug_RAE", "ug_DFE"}
 OBSERVATION_STATUS = {"observed", "reported_zero", "not_reported"}
@@ -187,7 +187,7 @@ def run(*, food_path: Path, reference_path: Path, output_dir: Path,
     manifest = {
         "experiment_id": "OP-M1-001",
         "state": "exploratory_reanalysis_not_clinical",
-        "food_id": "USDA FDC 170438 (SR Legacy; secondary transcription pending official verification)",
+        "food_id": food["energy_kcal"].source_id,
         "energy_equivalent_grams": str(equivalent),
         "energy_target_kcal_is_hypothetical": str(energy_kcal),
         "profiles": sorted(references),
@@ -198,7 +198,7 @@ def run(*, food_path: Path, reference_path: Path, output_dir: Path,
         },
         "limitations": [
             "No es una dieta recomendada ni una evaluación clínica.",
-            "Datos secundarios del registro FDC; pendiente verificación directa del USDA.",
+            "Consultar la procedencia en el CSV y datasets/official/provenance.json; fuente SR Legacy histórica, no medidas actuales por cultivar.",
             "Comparación dietaria con RDA/AI no mide biodisponibilidad, déficit individual ni seguridad.",
             "Por debajo de AI no prueba insuficiencia; superar RDA no prueba seguridad ni cobertura completa.",
             "Cero informado no garantiza ausencia química; falta de dato no equivale a cero.",
