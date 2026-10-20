@@ -78,7 +78,9 @@ def extract(archive_path: Path, output_dir: Path, expected_sha256: str | None = 
             if kind is None:
                 continue
             if entry["data_type"].casefold() not in ("foundation_food", "foundation"):
-                raise ValueError(f"{kind} is not Foundation Food")
+                # Different FDC data types may share the exact same food description.
+                # Only use Foundation, NEVER substitute historical SR Legacy rows.
+                continue
             versions[kind].append({
                 "fdc_id": entry["fdc_id"],
                 "description": entry["description"],
