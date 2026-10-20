@@ -36,7 +36,7 @@ jobs:
         env:
           PYTHONPATH: .:src
         run: |
-          python -m scripts.usda_foundation --zip /tmp/fdc_foundation_2026.zip --output-dir /tmp/foundation
+          python -m scripts.usda_foundation --zip /tmp/fdc_foundation_2026.zip --output-dir /tmp/foundation --expected-sha256 70457ee9d9342f43bda2010318c85f04210c689fdeb9cd2da4c513b0e8dbc655
           cat /tmp/foundation/foundation_comparison.md
           cat /tmp/foundation/foundation_provenance.json
       - name: Publicar artefactos auditables de Foundation
