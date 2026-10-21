@@ -1,0 +1,82 @@
+name: M1 hypothetical independent-site trial power simulation
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/trial_design_monte_carlo.py"
+      - "tests/test_trial_design_monte_carlo.py"
+      - ".github/workflows/m1-trial-design-simulation.yml"
+  workflow_dispatch:
+
+jobs:
+  simulate-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Scientific repository test suite including new simulation
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Generate preregistered, hypothetical 18-design Monte Carlo
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.trial_design_monte_carlo \
+            --out /tmp/openpotato-m1-15-simulated-only \
+            --draws 5000 --seed 20261021
+      - name: Verify explicitly synthetic results and file integrity
+        run: |
+          python - <<'PY'
+          import csv,hashlib,json,pathlib
+          p=pathlib.Path("/tmp/openpotato-m1-15-simulated-only")
+          manifest=json.loads((p/"synthetic_trial_design_provenance.json").read_text())
+          csvpath=p/"synthetic_trial_design_sensitivity.csv"
+          records=list(csv.DictReader(csvpath.open()))
+          assert manifest["status"]=="SIMULATION_ONLY_NO_REAL_TRIAL_OR_MINERAL_PHENOTYPES"
+          assert len(records)==manifest["designs"]==18
+          assert manifest["derived_csv_sha256"]==hashlib.sha256(csvpath.read_bytes()).hexdigest()
+          assert all(r["simulation_only_not_empirical_evidence"]=="True" for r in records)
+          assert all(.02<float(r["simulated_type_i_error"])<.08 for r in records)
+          for r in records:
+              assert "genotype_id" not in r and "plot_id" not in r
+          print((p/"synthetic_trial_design_report.md").read_text())
+          print("PASS: 18 hypothetical scenarios, no original phenotype data.")
+          PY
+      - name: Archive ONLY labeled synthetic model outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-15-simulation-not-potato-trial-results
+          retention-days: 30
+          path: /tmp/openpotato-m1-15-simulated-only/
+
+  pin-hypothetical-derivative:
+    needs: simulate-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: m1-15-simulation-not-potato-trial-results
+          path: datasets/hypothetical_trial_design
+      - name: Publish explicitly hypothetical simulation results on research branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/hypothetical_trial_design
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1-15): pin reproducible HYPOTHETICAL trial design sensitivity"
+            git fetch origin research/m1-nutrition-baseline
+            git rebase origin/research/m1-nutrition-baseline
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi
