@@ -1,0 +1,106 @@
+name: M1-16 WOFOST81 generic potato with observed NASA POWER weather
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/wofost_potato_nasa.py"
+      - "tests/test_wofost_potato_nasa.py"
+      - ".github/workflows/m1-16-potato-growth-model.yml"
+  workflow_dispatch:
+
+jobs:
+  model-and-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned WOFOST model engine
+        run: python -m pip install "pcse==6.0.13"
+      - name: All scientific offline regression tests
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Run real mechanistic growth model with PINNED historical NASA weather snapshots
+        env:
+          PYTHONPATH: .:src
+        run: |
+          mkdir -p /tmp/m1-16/weather
+          if test -f datasets/wofost_potato_m1_16/weather/trenque_lauquen.json \
+             && test -f datasets/wofost_potato_m1_16/weather/neuquen.json; then
+            cp datasets/wofost_potato_m1_16/weather/*.json /tmp/m1-16/weather/
+            echo "Reusing public NASA weather from committed immutable research snapshot"
+            python -m scripts.wofost_potato_nasa \
+              --weather-dir /tmp/m1-16/weather --out /tmp/m1-16/model
+          elif ! test -d datasets/wofost_potato_m1_16/weather; then
+            echo "First M1-16 acquisition only: downloading PUBLIC NASA POWER weather"
+            python -m scripts.wofost_potato_nasa \
+              --weather-dir /tmp/m1-16/weather --out /tmp/m1-16/model --acquire
+          else
+            echo "::error::Partially committed NASA inputs: manual recovery required"
+            exit 1
+          fi
+      - name: Validate eight scenarios and compare weather hashes to actual inputs
+        run: |
+          python - <<'PY'
+          import csv,hashlib,json,pathlib
+          root=pathlib.Path("/tmp/m1-16")
+          m=json.loads((root/"model/potential_model_provenance.json").read_text())
+          scenarios=list(csv.DictReader((root/"model/generic_potato_potential_scenarios.csv").open()))
+          daily=list(csv.DictReader((root/"model/generic_potato_potential_daily.csv").open()))
+          assert m["status"]=="WOFOST_POTENTIAL_DRY_STORAGE_BIOMASS_UNCALIBRATED"
+          assert m["scenarios"]==len(scenarios)==8
+          assert m["daily_output_records"]==len(daily)>1000
+          assert m["does_not_simulate_water_stress"] is True
+          assert m["unlimited_water_and_nutrients"] is True
+          for label, digest in m["weather_json_sha256"].items():
+            path=root/"weather"/(label+".json")
+            assert digest==hashlib.sha256(path.read_bytes()).hexdigest()
+          for name,digest in m["derived_csv_sha256"].items():
+            path=root/"model"/name
+            assert digest==hashlib.sha256(path.read_bytes()).hexdigest()
+          assert all(float(s["potential_storage_dry_kg_ha"])>0 for s in scenarios)
+          assert all(s["interpretation"]==m["status"] for s in scenarios)
+          assert all(s["generic_variety"]=="Potato_701" for s in scenarios)
+          assert len({(s["site_label"],s["campaign"],s["assumed_emergence_date"])
+                      for s in scenarios})==8
+          assert "iron" not in scenarios[0] and "zinc" not in scenarios[0]
+          print((root/"model/potential_model_report.md").read_text())
+          print("SUCCESS: eight REAL WOFOST runs with REAL NASA weather, UNCALIBRATED potato scenarios")
+          PY
+      - name: Archive observed historical weather snapshots and modeled results only
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-16-NASA-weather-and-UNCALIBRATED-potato-model
+          retention-days: 30
+          path: /tmp/m1-16/
+
+  publish-pinned-replay-data:
+    needs: model-and-audit
+    if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: m1-16-NASA-weather-and-UNCALIBRATED-potato-model
+          path: datasets/wofost_potato_m1_16/
+      - name: Publish pinned NASA observations and labeled potential-growth modeling ONLY on research branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/wofost_potato_m1_16/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1-16): pin NASA meteorology and UNCALIBRATED WOFOST81 potato scenarios"
+            git fetch origin research/m1-nutrition-baseline
+            git rebase origin/research/m1-nutrition-baseline
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi
