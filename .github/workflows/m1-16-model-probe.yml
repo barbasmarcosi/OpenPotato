@@ -45,10 +45,10 @@ jobs:
           for dt in (date(2022,9,1),date(2023,1,15)):
               w=wdp(dt)
               print("WEATHER OBS",dt,w.IRRAD,w.TMIN,w.TMAX,w.RAIN,w.VAP,w.WIND,w.ET0,flush=True)
-          crop=YAMLCropDataProvider(Wofost81_PP,force_reload=True)
+          crop=YAMLCropDataProvider(Wofost81_PP,repository="https://raw.githubusercontent.com/ajwdewit/WOFOST_crop_parameters/1ca91d7dbb5aaf6b41462162de03a8254812d3a5",force_reload=True)
           crop.set_active_crop("potato","Potato_701")
           print("CROP TYPE",len(crop), sorted(crop)[:15],flush=True)
-          providers=ParameterProvider(cropdata=crop,soildata={},sitedata={})
+          providers=ParameterProvider(cropdata=crop,soildata={"SMFCF":0.30},sitedata={"CO2":410.0})
           agromanagement=[{date(2022,9,1):{"CropCalendar":{
               "crop_name":"potato","variety_name":"Potato_701",
               "crop_start_date":date(2022,9,1),"crop_start_type":"emergence",
