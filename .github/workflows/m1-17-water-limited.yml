@@ -1,0 +1,106 @@
+name: M1-17 WOFOST81 water-limited hypothetical soil sensitivities
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/wofost_water_sensitivity.py"
+      - "tests/test_wofost_water_sensitivity.py"
+      - ".github/workflows/m1-17-water-limited.yml"
+  workflow_dispatch:
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned WOFOST engine
+        run: python -m pip install "pcse==6.0.13"
+      - name: Verify entire existing scientific test suite
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Simulate WOFOST WLP on archival NASA data with explicitly assumed soil and no irrigation
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.wofost_water_sensitivity \
+            --weather-dir datasets/wofost_potato_m1_16/weather \
+            --baseline datasets/wofost_potato_m1_16/model/generic_potato_potential_scenarios.csv \
+            --out /tmp/openpotato-m1-17
+      - name: Fail closed if outputs imply observed yields, nutritional or unproven baseline
+        run: |
+          python - <<'PY'
+          import csv,hashlib,json,pathlib
+          root=pathlib.Path("/tmp/openpotato-m1-17")
+          m=json.loads((root/"water_limited_provenance.json").read_text())
+          rows=list(csv.DictReader((root/"water_limited_scenarios.csv").open()))
+          daily=list(csv.DictReader((root/"water_limited_daily.csv").open()))
+          assert m["status"]=="WOFOST_WATER_LIMITED_SCENARIO_ONLY_UNCALIBRATED"
+          assert m["model"]=="Wofost81_WLP_CWB"
+          assert m["simulated_scenarios"]==len(rows)==48
+          assert m["simulated_daily_rows"]==len(daily)>6000
+          assert m["no_irrigation"] is True
+          assert m["nitrogen_unlimited"] is True
+          assert m["not_real_soil_or_genotype_prediction"] is True
+          assert set(m["weather_snapshot_sha256"])=={"neuquen","trenque_lauquen"}
+          for key,digest in m["weather_snapshot_sha256"].items():
+            path=pathlib.Path("datasets/wofost_potato_m1_16/weather")/(key+".json")
+            assert hashlib.sha256(path.read_bytes()).hexdigest()==digest
+          for key,digest in m["scenario_csv_sha256"].items():
+            assert hashlib.sha256((root/key).read_bytes()).hexdigest()==digest
+          assert all(float(row["water_limited_storage_dry_kg_ha"])>=0 for row in rows)
+          assert all(row["irrigation_mm_assumed"]=="0" for row in rows)
+          assert all(row["interpretation"]==m["status"] for row in rows)
+          assert "genotype_id" not in rows[0] and "iron" not in rows[0] and "zinc" not in rows[0]
+          print("WATER SENSITIVITY VERIFIED: 48 explicit counterfactuals only")
+          print((root/"water_limited_report.md").read_text()[:6000])
+          PY
+      - name: Exact replay check if verified previous results are present
+        run: |
+          if test -f datasets/wofost_potato_m1_17/water_limited_provenance.json; then
+            python - <<'PY'
+          import json,pathlib
+          old=json.loads(pathlib.Path("datasets/wofost_potato_m1_17/water_limited_provenance.json").read_text())
+          new=json.loads(pathlib.Path("/tmp/openpotato-m1-17/water_limited_provenance.json").read_text())
+          assert old["scenario_csv_sha256"]==new["scenario_csv_sha256"],"WLP model outputs drift"
+          assert old["weather_snapshot_sha256"]==new["weather_snapshot_sha256"],"NASA source drift"
+          print("SUCCESS: exact replay of water-limited potato model outputs")
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m1-17-hypothetical-soils-UNVALIDATED-water-limited-potato
+          retention-days: 30
+          path: /tmp/openpotato-m1-17/
+
+  publish:
+    needs: simulate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: m1-17-hypothetical-soils-UNVALIDATED-water-limited-potato
+          path: datasets/wofost_potato_m1_17/
+      - name: Commit ONLY labeled counterfactual outputs after passing tests
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/wofost_potato_m1_17/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1-17): pin counterfactual water-limited WOFOST scenarios"
+            git fetch origin research/m1-nutrition-baseline
+            git rebase origin/research/m1-nutrition-baseline
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi
