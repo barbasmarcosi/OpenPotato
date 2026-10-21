@@ -259,6 +259,10 @@ def run(weather_dir, baseline_csv, out):
             writer.writerows(rows)
         hashes_derived[name]=base.sha256(path)
     meta={
+        "schema_version":"2.0",
+        "schema_change_reason":"Add daily-derived real model transpiration and original NASA rainfall, without altering 48 modeled TWSO scenarios",
+        "schema_v1_model_csv_sha256":"bf9d91f563c5945e2ff010f7cc27b86d9896ea8637a8c4d7a7bf771211d055aa",
+        "schema_v1_daily_csv_sha256":"a50537f09283069a0df51efda572c1ae5d7f535ecce0b1235660e5e00cab6011",
         "status":STATUS,"model":MODEL,"pcse_version":pcse.__version__,
         "crop_source_git_commit":base.CROP_COMMIT,"generic_variety":base.VARIETY,
         "weather_snapshot_sha256":hashes,
