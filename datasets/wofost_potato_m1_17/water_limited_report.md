@@ -59,4 +59,5 @@ Sin predicción varietal, sin nutrición Fe/Zn, sin ensayos de campo.
 No asumir independencia entre temporadas de la misma localidad; el ambiente histórico es grilla NASA.
 Las diferencias entre perfiles o humedades son sensibilidad a supuestos, NO predicción observada.
 Se necesita medir curvas de retención, humedad, profundidad y manejo para calibrar el modelo.
+Los días RFTRA<0.99 cuentan estrés hídrico modelado; la lluvia es una suma de grilla NASA en cm.
 Lluvia NASA real no implica riego real; no se optimizó calendario de riego ni se aconseja regar.
