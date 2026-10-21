@@ -1,0 +1,22 @@
+{
+  "GxE_site_contrast_sd_assumed": [
+    0.6,
+    1.5
+  ],
+  "biological_plot_sd_assumed": 1.0,
+  "derived_csv_sha256": "24644bd15935f3623bba34eb8adaa4dbaf1680214b43dd2fc9a870af7e8e1a28",
+  "designs": 18,
+  "draws_per_design": 5000,
+  "effect_assumed_in_plot_sd_units": 1.0,
+  "limitations": [
+    "All biological effects and GxE variance are hypothetical; no real potato genotype is predicted.",
+    "Site-year repetitions at the same site are correlated until proven otherwise.",
+    "Technical repeats reduce assay error only; they never increase biological replication.",
+    "Prospective power requires independent pilot estimates and an expert-designed model.",
+    "The simulated two-genotype contrast cannot rank real cultivars.",
+    "No mineral GxE results, nutritional yield, safety, bioavailability or field validation."
+  ],
+  "random_seed": 20261021,
+  "status": "SIMULATION_ONLY_NO_REAL_TRIAL_OR_MINERAL_PHENOTYPES",
+  "technical_assay_sd_assumed": 0.35
+}
