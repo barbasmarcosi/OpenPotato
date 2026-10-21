@@ -1,0 +1,115 @@
+name: M1-18 Equal-gross-irrigation counterfactual WOFOST simulation
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/wofost_irrigation_timing.py"
+      - "tests/test_wofost_irrigation_timing.py"
+      - ".github/workflows/m1-18-irrigation-timing.yml"
+  workflow_dispatch:
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned mechanistic model
+        run: python -m pip install "pcse==6.0.13"
+      - name: Entire offline scientific regression suite
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Re-run 48 controls and 96 equal-volume irrigated WOFOST scenarios
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.wofost_irrigation_timing \
+            --weather-dir datasets/wofost_potato_m1_16/weather \
+            --control-csv datasets/wofost_potato_m1_17/water_limited_scenarios.csv \
+            --out /tmp/openpotato-m1-18
+      - name: Enforce 48 exact no-water controls and 100 mm applied gross per treatment
+        run: |
+          python - <<'PY'
+          import csv,hashlib,json,pathlib
+          root=pathlib.Path("/tmp/openpotato-m1-18")
+          m=json.loads((root/"irrigation_timing_provenance.json").read_text())
+          def read(name):
+            with (root/name).open(newline="") as f:
+              return list(csv.DictReader(f))
+          rows=read("irrigation_timing_scenarios.csv")
+          events=read("irrigation_timing_events.csv")
+          days=read("irrigation_timing_daily.csv")
+          assert m["status"]=="WOFOST_HYPOTHETICAL_IRRIGATION_TIMING_NOT_CALIBRATED"
+          assert m["simulated_scenarios"]==len(rows)==144
+          assert m["zero_irrigation_reference_cases_verified"]==48
+          assert m["maximum_abs_control_biomass_replay_difference_kg_ha"]<=0.0001
+          assert len(events)==48*15
+          assert len(days)>21000
+          assert len(set(r["base_scenario_id"] for r in rows))==48
+          for name,digest in m["weather_sha256"].items():
+            file=pathlib.Path("datasets/wofost_potato_m1_16/weather")/(name+".json")
+            assert digest==hashlib.sha256(file.read_bytes()).hexdigest()
+          for filename,digest in m["derived_sha256"].items():
+            assert digest==hashlib.sha256((root/filename).read_bytes()).hexdigest()
+          for r in rows:
+            assert r["status"]==m["status"]
+            gross=float(r["gross_irrigation_mm_scheduled"])
+            effective=float(r["effective_irrigation_mm_scheduled"])
+            assert (gross,effective) in {(0,0),(100,80)},(gross,effective)
+            assert float(r["storage_organ_dry_kg_ha_modelled"])>=0
+            assert "genotype_id" not in r and "iron" not in r and "zinc" not in r
+          for r in events:
+            assert float(r["irrigation_amount_mm_gross"]) in (10,20)
+            assert float(r["effective_amount_mm_at_assumed_efficiency"]) in (8,16)
+          print("VALIDATED: 144 WOFOST scenarios, 48 exact prior controls, 96 equal-volume schedules.")
+          print((root/"irrigation_timing_report.md").read_text()[:4200])
+          PY
+      - name: Enforce bit-identical published CSV reproduction
+        run: |
+          if test -f datasets/wofost_potato_m1_18/irrigation_timing_provenance.json; then
+            python - <<'PY'
+          import json,pathlib
+          previous=json.loads(pathlib.Path("datasets/wofost_potato_m1_18/irrigation_timing_provenance.json").read_text())
+          current=json.loads(pathlib.Path("/tmp/openpotato-m1-18/irrigation_timing_provenance.json").read_text())
+          assert previous["schema_version"]==current["schema_version"]=="1.0"
+          assert previous["derived_sha256"]==current["derived_sha256"],"M1-18 model replay drift"
+          assert previous["weather_sha256"]==current["weather_sha256"],"M1-18 weather drift"
+          print("PASS: exact WOFOST irrigation replay, unchanged sources and results.")
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m1-18-HYPOTHETICAL-irrigation-100mm-no-field-calibration
+          retention-days: 30
+          path: /tmp/openpotato-m1-18/
+
+  publish:
+    needs: simulate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: m1-18-HYPOTHETICAL-irrigation-100mm-no-field-calibration
+          path: datasets/wofost_potato_m1_18/
+      - name: Commit scientifically labeled outputs only to draft PR head
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/wofost_potato_m1_18/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1-18): pin equal-volume irrigation counterfactual models"
+            git fetch origin research/m1-nutrition-baseline
+            git rebase origin/research/m1-nutrition-baseline
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi
