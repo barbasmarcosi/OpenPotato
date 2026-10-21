@@ -73,6 +73,20 @@ jobs:
           print((root/"model/potential_model_report.md").read_text())
           print("SUCCESS: eight REAL WOFOST runs with REAL NASA weather, UNCALIBRATED potato scenarios")
           PY
+      - name: Exact offline replay against last accepted published model outputs
+        run: |
+          if test -f datasets/wofost_potato_m1_16/model/potential_model_provenance.json; then
+            python - <<'PY'
+          import json,pathlib
+          old=json.loads(pathlib.Path("datasets/wofost_potato_m1_16/model/potential_model_provenance.json").read_text())
+          fresh=json.loads(pathlib.Path("/tmp/m1-16/model/potential_model_provenance.json").read_text())
+          assert fresh["pinned_nasa_weather_sha256_verified"] is True
+          assert old["weather_json_sha256"]==fresh["weather_json_sha256"],"Weather snapshot changed"
+          assert old["derived_csv_sha256"]==fresh["derived_csv_sha256"],"WOFOST replay output drift"
+          assert old["scenarios"]==fresh["scenarios"]==8
+          print("SUCCESS: exact offline NASA weather and WOFOST CSV SHA-256 replay")
+          PY
+          fi
       - name: Archive observed historical weather snapshots and modeled results only
         uses: actions/upload-artifact@v4
         with:
