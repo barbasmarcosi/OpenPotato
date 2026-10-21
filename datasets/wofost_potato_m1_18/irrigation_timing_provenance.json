@@ -1,0 +1,79 @@
+{
+  "control_m17_csv_sha256": "b2d50faecedf1c59c41c083b79b368f49a88ca74486af3a2ae447de176e2fb40",
+  "crop_generic_potato": "Potato_701",
+  "crop_parameters_git_commit": "1ca91d7dbb5aaf6b41462162de03a8254812d3a5",
+  "daily_records": 24120,
+  "derived_sha256": {
+    "irrigation_timing_daily.csv": "95dfc9969755258fc1b70eb39247bfb4cdf81281a9a6b224c5667f62562599d4",
+    "irrigation_timing_events.csv": "016d7dcfca5c52dd77186aaf8368d5000831edbe0e2ea30dc58c26ce5ba9e315",
+    "irrigation_timing_scenarios.csv": "7dfb6cf12fc1932da855370724a16f944b8cde05587a1d7f9e25c8d247c4eede"
+  },
+  "engine_pcse": "6.0.13",
+  "initial_available_water_cm_hypothetical": {
+    "dry": 2.0,
+    "intermediate": 10.0,
+    "wet": 18.0
+  },
+  "irrigation_delivery_efficiency_hypothetical": 0.8,
+  "limitations": [
+    "Gross irrigation is scheduled, not metered in a physical field.",
+    "Assumed 0.80 effectiveness is not real system efficiency, runoff or application uniformity.",
+    "Water response and biomass are WOFOST simulated dry storage organ values, not potato yields observed.",
+    "Gain per gross irrigation mm is a descriptive conditional model sensitivity, not farm WUE.",
+    "No calibration of soils, crop phenology, irrigation infrastructure or real weather station.",
+    "No Fe, Zn, mineral uptake, bioavailability, glycoalkaloids or cultivar recommendation.",
+    "All schedules end by day 77 after assumed emergence, but crop maturity may vary among models.",
+    "Cannot infer optimal irrigation policy, drought tolerance, economical yield or actual freshwater saving."
+  ],
+  "maximum_abs_control_biomass_replay_difference_kg_ha": 4.913891501701073e-06,
+  "model": "Wofost81_WLP_CWB",
+  "scheduled_events": 720,
+  "schema_version": "1.0",
+  "simulated_scenarios": 144,
+  "soil_profiles_hypothetical": {
+    "coarse_assumed": {
+      "CRAIRC": 0.06,
+      "KSUB": 6.0,
+      "RDMSOL": 100.0,
+      "SM0": 0.38,
+      "SMFCF": 0.2,
+      "SMW": 0.08,
+      "SOPE": 6.0
+    },
+    "medium_assumed": {
+      "CRAIRC": 0.06,
+      "KSUB": 2.0,
+      "RDMSOL": 100.0,
+      "SM0": 0.47,
+      "SMFCF": 0.32,
+      "SMW": 0.12,
+      "SOPE": 2.0
+    }
+  },
+  "status": "WOFOST_HYPOTHETICAL_IRRIGATION_TIMING_NOT_CALIBRATED",
+  "strategies_hypothetical": {
+    "fortnightly_100mm": {
+      "events": 5,
+      "gross_mm_per_event": 20,
+      "interval_days": 14,
+      "start_day": 14
+    },
+    "none": {
+      "events": 0,
+      "gross_mm_per_event": 0,
+      "interval_days": 0,
+      "start_day": 0
+    },
+    "weekly_100mm": {
+      "events": 10,
+      "gross_mm_per_event": 10,
+      "interval_days": 7,
+      "start_day": 14
+    }
+  },
+  "weather_sha256": {
+    "neuquen": "8d0656de76652e14bef10fc1d79a9f19e73055052c889afb11f51959b5fb1d34",
+    "trenque_lauquen": "32b9404dadf8cf52a59e21a3c3094ea815d7d5485a995704b5b5bfcbd2b07e32"
+  },
+  "zero_irrigation_reference_cases_verified": 48
+}
