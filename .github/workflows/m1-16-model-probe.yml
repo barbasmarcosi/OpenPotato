@@ -28,7 +28,19 @@ jobs:
           from pcse.models import Wofost81_PP
           logging.basicConfig(level=logging.ERROR)
           print("PCSE VERSION",pcse.__version__,flush=True)
-          wdp=NASAPowerWeatherDataProvider(latitude=-35.97,longitude=-62.73)
+          import requests
+          class WindowPower(NASAPowerWeatherDataProvider):
+              def _query_NASAPower_server(self,latitude,longitude):
+                  url="https://power.larc.nasa.gov/api/temporal/daily/point"
+                  params={"parameters":",".join(self.power_variables),
+                          "latitude":latitude,"longitude":longitude,
+                          "start":"20220101","end":"20230301",
+                          "community":"AG","format":"JSON"}
+                  response=requests.get(url,params=params,timeout=90)
+                  response.raise_for_status()
+                  print("NASA REQUEST",response.url,"bytes",len(response.content),flush=True)
+                  return response.json()
+          wdp=WindowPower(latitude=-35.97,longitude=-62.73,force_update=True)
           print("WEATHER META",wdp.description,wdp.first_date,wdp.last_date,flush=True)
           for dt in (date(2022,9,1),date(2023,1,15)):
               w=wdp(dt)
