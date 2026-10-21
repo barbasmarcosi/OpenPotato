@@ -1,0 +1,104 @@
+name: M1 CIP Peru sample-to-plot linkage readiness
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/cip_peru_public_linkage.py"
+      - "tests/test_cip_peru_public_linkage.py"
+      - "scripts/validate_fe_zn_trial.py"
+      - "tests/test_validate_fe_zn_trial.py"
+      - ".github/workflows/cip-peru-linkage-readiness.yml"
+  workflow_dispatch:
+
+jobs:
+  validate-public-linkage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Full offline tests including physical plot non-reuse and privacy
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Obtain ONLY unrestricted CIP 1.0 files and verify pinned SHA-256
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python - <<'PY'
+          import json,pathlib,urllib.parse,urllib.request
+          from scripts.cip_peru_public_linkage import SOURCES,sha256
+          doi="doi:10.21223/N11QJS"
+          req=urllib.request.Request(
+              "https://data.cipotato.org/api/datasets/:persistentId/?persistentId="+
+              urllib.parse.quote(doi,safe=""),
+              headers={"User-Agent":"OpenPotato-M1-13-Source-Audit/0.1"})
+          with urllib.request.urlopen(req,timeout=40) as resp:
+              metadata=json.load(resp)
+          if metadata.get("status")!="OK":
+              raise ValueError("CIP metadata unavailable")
+          ver=metadata["data"]["latestVersion"]
+          if (ver.get("versionNumber"),ver.get("versionMinorNumber"))!=(1,0):
+              raise ValueError("CIP dataset version changed")
+          entries={e["dataFile"]["id"]:e for e in ver["files"]}
+          root=pathlib.Path("/tmp/m1-13-cip-source")
+          root.mkdir(parents=True,exist_ok=True)
+          for label,entry in SOURCES.items():
+              fileid=entry["id"]
+              filemeta=entries.get(fileid)
+              if filemeta is None or filemeta.get("restricted",filemeta["dataFile"].get("restricted",True)):
+                  raise ValueError("Do not access missing/restricted source "+str(fileid))
+              req=urllib.request.Request(
+                  f"https://data.cipotato.org/api/access/datafile/{fileid}",
+                  headers={"User-Agent":"OpenPotato-M1-13-Source-Audit/0.1"})
+              with urllib.request.urlopen(req,timeout=45) as resp:
+                  if not resp.headers.get("Content-Type","").startswith("text/tab-separated-values"):
+                      raise ValueError("Unexpected source MIME "+str(fileid))
+                  payload=resp.read()
+              file=root/f"{fileid}.tab"
+              file.write_bytes(payload)
+              if sha256(file)!=entry["sha"]:
+                  raise ValueError("Source bytes changed; manually audit before continuing")
+              print("VERIFIED_PUBLIC_SHA",fileid,entry["sha"],flush=True)
+          PY
+      - name: Audit only schema and provenance - never export participant records
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.cip_peru_public_linkage             --input-dir /tmp/m1-13-cip-source --out /tmp/m1-13-readiness
+          cat /tmp/m1-13-readiness/cip_public_linkage_report.md
+          cat /tmp/m1-13-readiness/cip_public_linkage_provenance.json
+      - name: Archive source-schema-only derivatives
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-13-public-source-schema-linkage-readiness
+          retention-days: 30
+          path: /tmp/m1-13-readiness/
+
+  pin-sanitized-readiness:
+    needs: validate-public-linkage
+    if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: m1-13-public-source-schema-linkage-readiness
+          path: datasets/cip_peru_linkage
+      - name: Commit ONLY anonymized schema inventory after success
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/cip_peru_linkage/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1-13): pin sanitized CIP source linkage-readiness report"
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi
