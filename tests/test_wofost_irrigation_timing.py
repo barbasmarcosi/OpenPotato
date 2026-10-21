@@ -27,9 +27,8 @@ class IrrigationTests(unittest.TestCase):
         a=m.timed_agromanagement(start,date(2024,3,1),"weekly_100mm")
         event=a[0][start]["TimedEvents"][0]
         self.assertEqual(event["event_signal"],"irrigate")
-        self.assertEqual(set(event["events_table"][0].values().__iter__().__next__()),
-                         {"amount","efficiency"})
         first_date,first_args=next(iter(event["events_table"][0].items()))
+        self.assertEqual(set(first_args), {"amount","efficiency"})
         self.assertEqual(first_date,start+timedelta(days=14))
         self.assertEqual(first_args,{"amount":1.0,"efficiency":0.8})
 
@@ -83,7 +82,8 @@ class IrrigationTests(unittest.TestCase):
         self.assertNotIn("iron",joined)
         self.assertNotIn("zinc",joined)
         self.assertNotIn("fresh_tuber_yield",joined)
-        self.assertIn("SENSITIVITY",m.STATUS.replace("HYPOTHETICAL_IRRIGATION_TIMING","HYPOTHETICAL_IRRIGATION_TIMING_SENSITIVITY"))
+        self.assertIn("HYPOTHETICAL",m.STATUS)
+        self.assertIn("NOT_CALIBRATED",m.STATUS)
 
 
 if __name__=="__main__":
