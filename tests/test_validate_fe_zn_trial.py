@@ -86,5 +86,34 @@ class QualityGate(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"Inconsistent plot area"):
                 inspect(p)
 
+    def test_same_physical_plot_cannot_belong_to_two_genotypes(self):
+        with tempfile.TemporaryDirectory() as t:
+            p=Path(t)/"synthetic.csv"
+            def collide(rows):
+                plot=rows[0]["plot_id"]  # CLONE-001 block B1, environment L1
+                for row in rows[6:9]:   # CLONE-002 block B1, same environment
+                    row["plot_id"]=plot
+            write(p,collide)
+            with self.assertRaisesRegex(ValueError,"Physical plot assigned to different genotypes"):
+                inspect(p)
+
+    def test_malformed_extra_column_rejected_before_plot_analysis(self):
+        with tempfile.TemporaryDirectory() as t:
+            p=Path(t)/"synthetic.csv"
+            write(p)
+            with p.open("a", encoding="utf-8") as stream:
+                stream.write(",".join(["INVALID"]*(len(FIELDS)+1))+"\\n")
+            with self.assertRaisesRegex(ValueError,"Malformed CSV row"):
+                inspect(p)
+
+    def test_malformed_missing_column_rejected_before_plot_analysis(self):
+        with tempfile.TemporaryDirectory() as t:
+            p=Path(t)/"synthetic.csv"
+            write(p)
+            with p.open("a", encoding="utf-8") as stream:
+                stream.write("TRUNCATED_RECORD\\n")
+            with self.assertRaisesRegex(ValueError,"Malformed CSV row"):
+                inspect(p)
+
 if __name__=="__main__":
     unittest.main()
