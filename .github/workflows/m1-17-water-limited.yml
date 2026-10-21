@@ -68,16 +68,54 @@ jobs:
           print("WATER SENSITIVITY VERIFIED: 48 explicit counterfactuals only")
           print((root/"water_limited_report.md").read_text()[:6000])
           PY
-      - name: Exact replay check if verified previous results are present
+      - name: Verify exact scientific replay or documented schema v1 to v2 migration
         run: |
           if test -f datasets/wofost_potato_m1_17/water_limited_provenance.json; then
             python - <<'PY'
-          import json,pathlib
-          old=json.loads(pathlib.Path("datasets/wofost_potato_m1_17/water_limited_provenance.json").read_text())
-          new=json.loads(pathlib.Path("/tmp/openpotato-m1-17/water_limited_provenance.json").read_text())
-          assert old["scenario_csv_sha256"]==new["scenario_csv_sha256"],"WLP model outputs drift"
+          import csv,json,pathlib
+          oldroot=pathlib.Path("datasets/wofost_potato_m1_17")
+          newroot=pathlib.Path("/tmp/openpotato-m1-17")
+          old=json.loads((oldroot/"water_limited_provenance.json").read_text())
+          new=json.loads((newroot/"water_limited_provenance.json").read_text())
           assert old["weather_snapshot_sha256"]==new["weather_snapshot_sha256"],"NASA source drift"
-          print("SUCCESS: exact replay of water-limited potato model outputs")
+          assert old["potential_baseline_csv_sha256"]==new["potential_baseline_csv_sha256"],"PP baseline drift"
+          assert old["hypothetical_soil_profiles"]==new["hypothetical_soil_profiles"],"Soil assumptions drift"
+          assert old["initial_available_water_cm_assumed"]==new["initial_available_water_cm_assumed"],"Initial-water assumptions drift"
+          assert old["simulated_scenarios"]==new["simulated_scenarios"]==48
+          if old.get("schema_version")=="2.0":
+            assert old["scenario_csv_sha256"]==new["scenario_csv_sha256"],"Unexpected WLP v2 output drift"
+            print("SUCCESS: exact replay of accepted v2 WOFOST water-limited outputs")
+          else:
+            # One-time migration of output columns ONLY: previously published
+            # v1 model/series hashes are fixed. Every physical result must be
+            # unchanged for all 48 scenarios and all 8040 daily records.
+            assert new["schema_version"]=="2.0"
+            assert old["scenario_csv_sha256"]["water_limited_scenarios.csv"]==new["schema_v1_model_csv_sha256"]
+            assert old["scenario_csv_sha256"]["water_limited_daily.csv"]==new["schema_v1_daily_csv_sha256"]
+            assert new["scenario_csv_sha256"]["water_limited_daily.csv"]==old["scenario_csv_sha256"]["water_limited_daily.csv"]
+            def rows(path):
+              with path.open(newline="",encoding="utf-8") as f:
+                return list(csv.DictReader(f))
+            oldrows=rows(oldroot/"water_limited_scenarios.csv")
+            newrows=rows(newroot/"water_limited_scenarios.csv")
+            assert len(oldrows)==len(newrows)==48
+            oldby={r["scenario_id"]:r for r in oldrows}
+            newby={r["scenario_id"]:r for r in newrows}
+            assert set(oldby)==set(newby)
+            unchanged_fields=[
+              "site_label","campaign","assumed_emergence","assumed_harvest",
+              "soil_profile_hypothetical","initial_water_label",
+              "initial_available_water_cm_assumed","irrigation_mm_assumed",
+              "water_limited_storage_dry_kg_ha","potential_storage_dry_kg_ha",
+              "water_limited_to_potential_ratio_descriptive","days_simulated",
+              "average_root_zone_moisture_m3_m3","weather_snapshot_sha256","interpretation",
+            ]
+            for key in oldby:
+              for field in unchanged_fields:
+                assert oldby[key][field]==newby[key][field],f"Scientific model change in {field}"
+            assert all(r["total_actual_transpiration_cm"]!="" for r in newrows)
+            assert all(r["nasa_cumulative_rainfall_cm_during_simulated_days"]!="" for r in newrows)
+            print("SUCCESS: one-time v1→v2 schema migration; exact 48 WOFOST physics unchanged and daily SHA unchanged")
           PY
           fi
       - uses: actions/upload-artifact@v4
