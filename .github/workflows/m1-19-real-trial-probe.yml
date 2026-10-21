@@ -55,8 +55,68 @@ jobs:
           (p/"harvard_public_file_inventory.json").write_text(
               json.dumps(output,indent=2,ensure_ascii=False,sort_keys=True)+"\n")
           PY
+      - name: Check original published 2019-2020 plot CSV byte integrity and nonidentifying schema
+        run: |
+          python - <<'PY'
+          import collections,csv,hashlib,io,json,pathlib,urllib.request,zipfile
+          root=pathlib.Path("/tmp/m1-19-discovery")
+          allowed=[
+            (10850227,"Plotspecific_processed.csv","bdf0f745e2c496868e3285a43df0ff04"),
+            (10850226,"Plotspecific_processed_meta.xlsx","71fd84275db40cc56b3ba14427efb8f5"),
+            (10284791,"Irrigation.xlsx","5f044499a3e60b4a7fcdf1aba6dc62d7"),
+            (10284792,"Weatherfile_lelystad.xlsx","01c530be2aa24e5b2c6227730c154de5"),
+            (10284786,"Weatherfile_vredepeel.xlsx","e0f66d4a71d7a9e2bce06cb17581f2ae"),
+          ]
+          report={"source_doi":"10.7910/DVN/1LC6W7","version":"3.0",
+                  "license":"CC BY-NC-SA 4.0","no_original_rows_exported":True,
+                  "original_source_files":[]}
+          for fileid,name,expected_md5 in allowed:
+              request=urllib.request.Request(
+                f"https://dataverse.harvard.edu/api/access/datafile/{fileid}",
+                headers={"User-Agent":"OpenPotato-M1-19-SourceSchemaOnly/0.1"})
+              with urllib.request.urlopen(request,timeout=55) as r:
+                  payload=r.read()
+              if hashlib.md5(payload).hexdigest()!=expected_md5:
+                  raise ValueError("Published original checksum changed: "+name)
+              record={"file_id":fileid,"name":name,
+                      "source_md5":expected_md5,
+                      "source_sha256":hashlib.sha256(payload).hexdigest(),
+                      "original_bytes":len(payload)}
+              if name.endswith(".csv"):
+                  raw=payload.decode("utf-8-sig")
+                  sample=raw[:4000]
+                  dialect=csv.Sniffer().sniff(sample,delimiters=",;\t")
+                  rows=csv.reader(io.StringIO(raw),dialect=dialect)
+                  header=next(rows)
+                  if len(header)!=len(set(header)):
+                      raise ValueError("Duplicate source CSV column names")
+                  nonempty=collections.Counter()
+                  count=0
+                  for row in rows:
+                      if len(row)!=len(header):
+                          raise ValueError("Inconsistent source CSV row width")
+                      count+=1
+                      for i,v in enumerate(row):
+                          if v.strip():nonempty[header[i]]+=1
+                  record.update(columns=header,column_count=len(header),
+                                data_rows=count,nonempty_per_column=dict(nonempty),
+                                detected_delimiter=dialect.delimiter)
+              else:
+                  with zipfile.ZipFile(io.BytesIO(payload)) as z:
+                      import xml.etree.ElementTree as ET
+                      wb=ET.fromstring(z.read("xl/workbook.xml"))
+                      ns={"x":"http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+                      sheets=wb.find("x:sheets",ns)
+                      record["workbook_sheet_names"]=[x.attrib["name"] for x in sheets]
+                      record["sheet_count"]=len(record["workbook_sheet_names"])
+              report["original_source_files"].append(record)
+              print("SCHEMA_SOURCE",json.dumps(record,ensure_ascii=False),flush=True)
+          (root/"source_schemas_no_plot_data.json").write_text(
+              json.dumps(report,ensure_ascii=False,sort_keys=True,indent=2)+"\n",
+              encoding="utf-8")
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: M1-19-harvard-dataverse-metadata-only
-          path: /tmp/m1-19-discovery/harvard_public_file_inventory.json
+          path: /tmp/m1-19-discovery/
           retention-days: 30
