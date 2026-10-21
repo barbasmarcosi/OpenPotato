@@ -97,7 +97,9 @@ def inspect_original(blob:bytes,*,expected_md5=SOURCE_MD5,expected_sha256=SOURCE
                 observed[col]+=1
     if rows!=EXPECTED_ROWS or combos!=SITE_YEAR_EXPECTED:
         raise ValueError("Unexpected original row count or site-year balance")
-    if dict(observed)!=EXPECTED_NUMERIC:
+    if set(observed)-set(EXPECTED_NUMERIC) or any(
+        observed[col]!=n for col,n in EXPECTED_NUMERIC.items()
+    ):
         raise ValueError("Measured coverage changed; inspect source before updating")
     report={
         "status":"REAL_FIELD_SOURCE_STRUCTURE_VERIFIED_NOT_WOFOST_CALIBRATION",
