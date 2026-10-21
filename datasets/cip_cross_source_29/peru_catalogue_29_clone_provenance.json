@@ -1,0 +1,37 @@
+{
+  "below_catalogue_counts": {
+    "iron": 29,
+    "zinc": 29
+  },
+  "derived_csv_sha256": "562b1477f54c23457e0497edf406b01ae02bb0735615a3a381f67589f3e26cfc",
+  "design": "cross_source_documentary_contrast_independence_unknown",
+  "independence_and_assay_equivalence": "unknown",
+  "limits": [
+    "This is NOT a paired multienvironment experiment, independent replication or technical validation.",
+    "Published catalogue and Peru summaries may share upstream study material.",
+    "Different sample collection years, environments, tissues and laboratory calibration are unverified.",
+    "No causal interpretation, statistical tests, p-values, phenotype prediction or candidate superiority.",
+    "Fe/Zn from these source summaries both use mg/kg dry matter; no yield units are compared.",
+    "Peru n may be pooled; its SD is not independent plot residual variance or standard error.",
+    "Published ratios/medians are documentary descriptions of point estimates, NOT treatment effects."
+  ],
+  "matched_accessions": 29,
+  "median_peru_to_catalogue_ratio_descriptive": {
+    "iron": "0.7217081405527071870701513067",
+    "zinc": "0.5412238325281803140096618357"
+  },
+  "peru_clone_not_in_catalogue": [
+    "CIP312686.019"
+  ],
+  "peru_controls_excluded": 4,
+  "peru_evaluated_clones": 30,
+  "source_csv_sha256": {
+    "catalogue": "76828f7b8514f4aa1501d33c27f30b301b6aa163564e5c969bc5f559cbcd37a5",
+    "peru": "01f16d03af0c16a01be8ccef77aadbd9811459a3d6a2b9ad98a84cf5784633ed"
+  },
+  "source_dois": {
+    "catalogue": "10.21223/P3/LQOT7Z",
+    "peru": "10.21223/N11QJS"
+  },
+  "trait_contrasts": 58
+}
