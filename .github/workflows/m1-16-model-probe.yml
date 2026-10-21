@@ -1,0 +1,52 @@
+name: M1-16 probe real WOFOST + NASA historical weather
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths: [".github/workflows/m1-16-model-probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exactly pinned PCSE
+        run: |
+          python -m pip install "pcse==6.0.13"
+      - name: Observe real NASA POWER and run WOFOST81 potato potential production
+        run: |
+          python - <<'PY'
+          import logging,pcse
+          from datetime import date
+          from pcse.input import NASAPowerWeatherDataProvider, YAMLCropDataProvider
+          from pcse.base import ParameterProvider
+          from pcse.models import Wofost81_PP
+          logging.basicConfig(level=logging.ERROR)
+          print("PCSE VERSION",pcse.__version__,flush=True)
+          wdp=NASAPowerWeatherDataProvider(latitude=-35.97,longitude=-62.73)
+          print("WEATHER META",wdp.description,wdp.first_date,wdp.last_date,flush=True)
+          for dt in (date(2022,9,1),date(2023,1,15)):
+              w=wdp(dt)
+              print("WEATHER OBS",dt,w.IRRAD,w.TMIN,w.TMAX,w.RAIN,w.VAP,w.WIND,w.ET0,flush=True)
+          crop=YAMLCropDataProvider(Wofost81_PP,force_reload=True)
+          crop.set_active_crop("potato","Potato_701")
+          print("CROP TYPE",len(crop), sorted(crop)[:15],flush=True)
+          providers=ParameterProvider(cropdata=crop,soildata={},sitedata={})
+          agromanagement=[{date(2022,9,1):{"CropCalendar":{
+              "crop_name":"potato","variety_name":"Potato_701",
+              "crop_start_date":date(2022,9,1),"crop_start_type":"emergence",
+              "crop_end_date":date(2023,2,1),"crop_end_type":"harvest","max_duration":155},
+              "TimedEvents":None,"StateEvents":None}}]
+          model=Wofost81_PP(providers,wdp,agromanagement)
+          model.run_till_terminate()
+          output=model.get_output()
+          summary=model.get_summary_output()
+          print("WOFOST DAYS",len(output),flush=True)
+          print("WOFOST FINAL",output[-1],flush=True)
+          print("WOFOST SUMMARY",summary,flush=True)
+          PY
