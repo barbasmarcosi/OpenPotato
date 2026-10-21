@@ -33,6 +33,10 @@ SITES = {
     "trenque_lauquen": (-35.97, -62.73),
     "neuquen": (-38.95, -68.06),
 }
+PINNED_WEATHER_SHA256 = {
+    "trenque_lauquen": "32b9404dadf8cf52a59e21a3c3094ea815d7d5485a995704b5b5bfcbd2b07e32",
+    "neuquen": "8d0656de76652e14bef10fc1d79a9f19e73055052c889afb11f51959b5fb1d34",
+}
 WEATHER_FIRST = date(2022, 1, 1)
 WEATHER_LAST = date(2024, 4, 1)
 HARVEST_MONTH_DAY = (3, 1)
@@ -145,8 +149,13 @@ def load_weather(weather_dir):
     sources, hashes = {}, {}
     for label in SITES:
         path = root/(label+".json")
+        if sha256(path) != PINNED_WEATHER_SHA256[label]:
+            raise ValueError("Historical NASA weather snapshot SHA-256 changed: manual rebaseline required")
         data = json.loads(path.read_bytes())
         validate_power(data)
+        if (abs(float(data["geometry"]["coordinates"][0])-SITES[label][1]) > 0.02
+                or abs(float(data["geometry"]["coordinates"][1])-SITES[label][0]) > 0.02):
+            raise ValueError("NASA weather source coordinates do not match declared research site")
         sources[label] = data
         hashes[label] = sha256(path)
     return sources, hashes
@@ -266,6 +275,7 @@ def run_model(weather_sources, source_hashes, out):
         "site_coordinates": {label: {"lat": lat, "lon": lon}
                              for label, (lat, lon) in SITES.items()},
         "weather_json_sha256": source_hashes,
+        "pinned_nasa_weather_sha256_verified": source_hashes == PINNED_WEATHER_SHA256,
         "assumed_soil_not_measured": ASSUMED_SOIL,
         "assumed_co2_ppm_not_observed": ASSUMED_SITE["CO2"],
         "assumed_planting_dates_not_recorded_field_dates": True,
@@ -295,7 +305,7 @@ def run_model(weather_sources, source_hashes, out):
         "Resultados en **kg/ha de MATERIA SECA de órganos de reserva** (TWSO),",
         "**nunca toneladas de tubérculo fresco**.",
         "Sin limitación de agua/nutrientes, con un clon genérico Potato_701;",
-        " no se modela déficit hídrico ni hierro o zinc.",
+        "No se modela déficit hídrico ni hierro o zinc.",
         "",
         "| Sitio de grilla NASA | Campaña | Emergencia supuesta | TWSO potencial seco (kg/ha) |",
         "|---|---|---|---:|",
