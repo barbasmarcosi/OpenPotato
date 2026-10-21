@@ -48,7 +48,7 @@ jobs:
           crop=YAMLCropDataProvider(Wofost81_PP,repository="https://raw.githubusercontent.com/ajwdewit/WOFOST_crop_parameters/1ca91d7dbb5aaf6b41462162de03a8254812d3a5",force_reload=True)
           crop.set_active_crop("potato","Potato_701")
           print("CROP TYPE",len(crop), sorted(crop)[:15],flush=True)
-          providers=ParameterProvider(cropdata=crop,soildata={"SMFCF":0.30},sitedata={"CO2":410.0})
+          providers=ParameterProvider(cropdata=crop,soildata={"SMFCF":0.30,"CRAIRC":0.06,"SM0":0.45,"SMW":0.10,"RDMSOL":100.0},sitedata={"CO2":410.0})
           agromanagement=[{date(2022,9,1):{"CropCalendar":{
               "crop_name":"potato","variety_name":"Potato_701",
               "crop_start_date":date(2022,9,1),"crop_start_type":"emergence",
