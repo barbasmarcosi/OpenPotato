@@ -1,0 +1,71 @@
+name: M1 plot sample laboratory chain-of-custody checks
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/validate_sample_lineage.py"
+      - "tests/test_validate_sample_lineage.py"
+      - ".github/workflows/m1-sample-lineage.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-lineage-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Full repository tests including biological vs technical replicates
+        env:
+          PYTHONPATH: .:src:tests
+        run: python -m unittest discover -s tests -v
+      - name: Run CLI on explicitly synthetic plots and inspect privacy-safe report
+        env:
+          PYTHONPATH: .:src:tests
+        run: |
+          python - <<'PY'
+          import csv,json,pathlib
+          from test_validate_sample_lineage import fixture
+          from scripts.validate_sample_lineage import STUDY_COLS
+          root=pathlib.Path("/tmp/openpotato-m1-14-synthetic")
+          root.mkdir(parents=True, exist_ok=True)
+          records=fixture()  # Fictional IDs; DO NOT publish as CIP evidence.
+          for name,fields in STUDY_COLS.items():
+              with (root/f"{name}.csv").open("w",newline="",encoding="utf-8") as f:
+                  writer=csv.DictWriter(f,fieldnames=sorted(fields))
+                  writer.writeheader()
+                  writer.writerows(records[name])
+          PY
+          python -m scripts.validate_sample_lineage \
+            --plots /tmp/openpotato-m1-14-synthetic/plots.csv \
+            --samples /tmp/openpotato-m1-14-synthetic/samples.csv \
+            --sample-plots /tmp/openpotato-m1-14-synthetic/sample_plots.csv \
+            --assays /tmp/openpotato-m1-14-synthetic/assays.csv \
+            --harvest /tmp/openpotato-m1-14-synthetic/harvest.csv \
+            --out /tmp/openpotato-m1-14-sanitized
+          python - <<'PY'
+          import json,pathlib
+          root=pathlib.Path("/tmp/openpotato-m1-14-sanitized")
+          report=json.loads((root/"sample_lineage_readiness.json").read_text())
+          assert report["status"]=="STRUCTURALLY_LINKED_EXPERT_REVIEW_REQUIRED",report["status"]
+          assert report["physical_plots"]==12
+          assert report["sample_records"]==12
+          assert report["statistical_model"]=="NO_MODEL_FITTED_REVIEW_ONLY"
+          for f in root.iterdir():
+              text=f.read_text(encoding="utf-8")
+              assert "PRIVATE_FAKE_SOURCE_NEVER_EXPORT" not in text
+              assert "S-SITE-1" not in text
+          print("Synthetic lineage contract passed: privacy-safe only, no GxE fitted")
+          PY
+      - name: Archive ONLY synthetic, de-identified structural test summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-14-synthetic-lineage-readiness-not-research-data
+          retention-days: 14
+          path: /tmp/openpotato-m1-14-sanitized/
