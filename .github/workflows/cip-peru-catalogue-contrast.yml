@@ -1,0 +1,63 @@
+name: M1 CIP 29 shared clones Peru vs catalogue contrast
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/cip_peru_catalogue_contrast.py"
+      - "tests/test_cip_peru_catalogue_contrast.py"
+      - ".github/workflows/cip-peru-catalogue-contrast.yml"
+      - "datasets/cip_peru_table12/peru_table12_fe_zn_summaries.csv"
+      - "datasets/cip_catalogue/cip_29_clones_catalogue.csv"
+  workflow_dispatch:
+
+jobs:
+  audited-contrast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate all offline scientific tests
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Contrast identical CIP identifiers between TWO published aggregate sources
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.cip_peru_catalogue_contrast --out /tmp/m1-12
+          cat /tmp/m1-12/peru_catalogue_29_clone_report.md
+          cat /tmp/m1-12/peru_catalogue_29_clone_provenance.json
+      - name: Archive audited source-specific contrasts
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-12-29-clone-documentary-contrast
+          retention-days: 30
+          path: /tmp/m1-12/
+
+  pin-audited-derivative:
+    needs: audited-contrast
+    if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: m1-12-29-clone-documentary-contrast
+          path: datasets/cip_cross_source_29
+      - name: Commit public documentation-level derivative if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/cip_cross_source_29/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1-12): pin 29-clone published source contrast and caveats"
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi
