@@ -30,6 +30,7 @@
   "model": "Wofost81_PP",
   "nasa_power_api": "https://power.larc.nasa.gov/api/temporal/daily/point",
   "pcse_version": "6.0.13",
+  "pinned_nasa_weather_sha256_verified": true,
   "scenarios": 8,
   "site_coordinates": {
     "neuquen": {

@@ -4,7 +4,7 @@
 Resultados en **kg/ha de MATERIA SECA de órganos de reserva** (TWSO),
 **nunca toneladas de tubérculo fresco**.
 Sin limitación de agua/nutrientes, con un clon genérico Potato_701;
- no se modela déficit hídrico ni hierro o zinc.
+No se modela déficit hídrico ni hierro o zinc.
 
 | Sitio de grilla NASA | Campaña | Emergencia supuesta | TWSO potencial seco (kg/ha) |
 |---|---|---|---:|
