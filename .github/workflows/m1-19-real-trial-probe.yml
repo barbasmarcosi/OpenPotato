@@ -1,0 +1,62 @@
+name: M1-19 public potato trial dataset metadata discovery
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths: [".github/workflows/m1-19-real-trial-probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect Harvard Dataverse versioned metadata without downloading trial participants or plot records
+        run: |
+          python - <<'PY'
+          import json,urllib.parse,urllib.request,pathlib,hashlib
+          doi="doi:10.7910/DVN/1LC6W7"
+          url="https://dataverse.harvard.edu/api/datasets/:persistentId/?persistentId="+urllib.parse.quote(doi,safe="")
+          request=urllib.request.Request(url,headers={"User-Agent":"OpenPotato-M1-19-MetadataAudit/0.1"})
+          with urllib.request.urlopen(request,timeout=50) as resp:
+              response=json.load(resp)
+          if response.get("status")!="OK":raise ValueError("Harvard Dataverse lookup unsuccessful")
+          info=response["data"];ver=info["latestVersion"]
+          version=(ver.get("versionNumber"),ver.get("versionMinorNumber"))
+          print("HARVARD_VERSION",version,"id",info.get("id"),flush=True)
+          fields={p["typeName"]:p.get("value") for block in ver.get("metadataBlocks",{}).values()
+                  for p in block.get("fields",[])}
+          for name in ["title","author","datasetContact","dsDescription","subject","license","termsOfUse","otherReferences"]:
+              if name in fields:
+                  val=fields[name]
+                  if name in ["author","datasetContact","dsDescription"]:
+                      print("METADATA_FIELD",name,"entries",len(val) if isinstance(val,list) else "n/a",flush=True)
+                  else:
+                      print("METADATA_FIELD",name,str(val)[:2000],flush=True)
+          print("DATASET_LICENSE",json.dumps(ver.get("license")),flush=True)
+          print("DATASET_TERMS",str(ver.get("termsOfUse"))[:1200],flush=True)
+          files=[]
+          for file in ver.get("files",[]):
+              df=file.get("dataFile",{})
+              item={"file_id":df.get("id"),"filename":df.get("filename"),
+                    "content_type":df.get("contentType"),"bytes":df.get("filesize"),
+                    "tabular_variables":df.get("variablesCount"),
+                    "row_count":df.get("recordsCount"),
+                    "restricted":file.get("restricted",df.get("restricted")),
+                    "md5":df.get("md5"),"sha256":df.get("checksum",{}).get("value")
+                    if df.get("checksum",{}).get("type","").upper()=="SHA-256" else None}
+              files.append(item)
+              print("DATAVERSE_FILE",json.dumps(item,ensure_ascii=False),flush=True)
+          output={"source_doi":doi,"version":version,"license":ver.get("license"),
+                  "terms_of_use":ver.get("termsOfUse"),"file_count":len(files),
+                  "files":files,"provenance":"Harvard Dataverse metadata only; no plot records transferred"}
+          p=pathlib.Path("/tmp/m1-19-discovery");p.mkdir(exist_ok=True)
+          (p/"harvard_public_file_inventory.json").write_text(
+              json.dumps(output,indent=2,ensure_ascii=False,sort_keys=True)+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: M1-19-harvard-dataverse-metadata-only
+          path: /tmp/m1-19-discovery/harvard_public_file_inventory.json
+          retention-days: 30
