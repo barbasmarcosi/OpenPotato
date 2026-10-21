@@ -53,7 +53,7 @@ def sha256(path):
 
 def audit(sources, out):
     if set(sources) != set(SOURCES):
-        raise ValueError("Provide exactly the six separately verified public CIP sources")
+        raise ValueError("Provide exactly six separately verified public CIP sources")
     summaries = []
     for label, expected in SOURCES.items():
         path = Path(sources[label])
