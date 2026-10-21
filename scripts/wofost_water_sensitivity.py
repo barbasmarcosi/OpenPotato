@@ -47,7 +47,7 @@ HEADERS = [
     "water_limited_storage_dry_kg_ha", "potential_storage_dry_kg_ha",
     "water_limited_to_potential_ratio_descriptive", "days_simulated",
     "average_root_zone_moisture_m3_m3", "total_actual_transpiration_cm",
-    "total_potential_transpiration_cm", "total_rainfall_cm",
+    "nasa_cumulative_rainfall_cm_during_simulated_days", "days_with_RFTRA_below_0_99",
     "weather_snapshot_sha256", "interpretation",
 ]
 DAILY_HEADERS = [
@@ -191,10 +191,26 @@ def run(weather_dir, baseline_csv, out):
                                    if r.get("SM") is not None]
                         if not moistures or any(not 0<=m<=soil["SM0"]+0.02 for m in moistures):
                             raise ValueError("Missing/unphysical root-zone volumetric moisture")
-                        waterbalance=final
-                        # Totals are WOFOST water-balance state variables (cm).
-                        tra=value(waterbalance.get("WTRAT"))
-                        rain=value(waterbalance.get("RAINT"))
+                        # Daily flux TRA is in cm/day in PCSE's water-limited model.
+                        # Do not claim a model WTRAT or TRAMX value if a summary
+                        # does not export it; aggregate only actual DAILY values.
+                        daily_tra=[float(r["TRA"]) for r in records
+                                   if r.get("TRA") is not None]
+                        if len(daily_tra)!=len(records) or any(
+                            not math.isfinite(x) or x < 0 for x in daily_tra
+                        ):
+                            raise ValueError("Missing/unphysical daily actual transpiration")
+                        weather_rain=[float(source[site]["properties"]["parameter"]
+                                            ["PRECTOTCORR"][r["day"].strftime("%Y%m%d")])
+                                      for r in records]
+                        if any(not math.isfinite(x) or x < 0 for x in weather_rain):
+                            raise ValueError("Missing/unphysical NASA daily rain")
+                        rftra=[float(r["RFTRA"]) for r in records
+                               if r.get("RFTRA") is not None]
+                        if len(rftra)!=len(records) or any(
+                            not math.isfinite(v) or not 0 <= v <= 1.0001 for v in rftra
+                        ):
+                            raise ValueError("Missing/unphysical water stress factor RFTRA")
                         summary.append({
                             "scenario_id": identity,
                             "site_label":site,"campaign":year,
@@ -209,9 +225,9 @@ def run(weather_dir, baseline_csv, out):
                             "water_limited_to_potential_ratio_descriptive":value(ratio),
                             "days_simulated":len(records),
                             "average_root_zone_moisture_m3_m3":value(sum(moistures)/len(moistures)),
-                            "total_actual_transpiration_cm":tra,
-                            "total_potential_transpiration_cm":"",
-                            "total_rainfall_cm":rain,
+                            "total_actual_transpiration_cm":value(sum(daily_tra)),
+                            "nasa_cumulative_rainfall_cm_during_simulated_days":value(sum(weather_rain)/10),
+                            "days_with_RFTRA_below_0_99":sum(v<0.99 for v in rftra),
                             "weather_snapshot_sha256":hashes[site],
                             "interpretation":STATUS,
                         })
@@ -250,12 +266,16 @@ def run(weather_dir, baseline_csv, out):
         "initial_available_water_cm_assumed":INITIAL_AVAILABLE_WATER_CM,
         "other_assumed_site_parameters":COMMON_SITE,
         "no_irrigation":True,"nitrogen_unlimited":True,
+        "daily_transpiration_cm_summed_from_WOFOST_TRA":True,
+        "nasa_cumulative_rainfall_uses_original_POWER_PRECTOTCORR_mm_divided_by_10":True,
+        "water_stress_days_defined_RFTRA_lt_0_99":True,
         "not_real_soil_or_genotype_prediction":True,
         "simulated_scenarios":len(summary),"simulated_daily_rows":len(daily),
         "scenario_csv_sha256":hashes_derived,
         "potential_baseline_csv_sha256":base.sha256(Path(baseline_csv)),
         "disclaimers":[
             "All soil hydraulic parameters and initial moisture are invented sensitivity cases.",
+            "Initial WAV concerns profile-level available water, NOT uniformly distributed initial root-zone moisture.",
             "Weather is archived gridded NASA POWER; not farm weather station data.",
             "WOFOST81_WLP_CWB models water limitation, but not nitrogen stress, disease or economic yield.",
             "Both model outputs TWSO represent DRY storage organ biomass kg/ha, not fresh potato harvest.",
@@ -286,6 +306,7 @@ def run(weather_dir, baseline_csv, out):
         "No asumir independencia entre temporadas de la misma localidad; el ambiente histórico es grilla NASA.",
         "Las diferencias entre perfiles o humedades son sensibilidad a supuestos, NO predicción observada.",
         "Se necesita medir curvas de retención, humedad, profundidad y manejo para calibrar el modelo.",
+        "Los días RFTRA<0.99 cuentan estrés hídrico modelado; la lluvia es una suma de grilla NASA en cm.",
         "Lluvia NASA real no implica riego real; no se optimizó calendario de riego ni se aconseja regar.",
     ]
     (out/"water_limited_report.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
