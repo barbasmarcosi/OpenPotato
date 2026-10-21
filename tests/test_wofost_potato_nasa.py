@@ -79,6 +79,30 @@ class ModelWeatherSourceTests(unittest.TestCase):
                     mod.acquire_weather(temp)
             self.assertEqual(path.read_text(),"LEGITIMATE_UNTOUCHED_ORIGINAL")
 
+    def test_committed_nasa_observations_are_original_pinned_sources(self):
+        weather_dir = Path(__file__).resolve().parents[1] / (
+            "datasets/wofost_potato_m1_16/weather")
+        if not weather_dir.is_dir():
+            self.skipTest("Initial source acquisition before first GitHub Actions publication")
+        sources, hashes = mod.load_weather(weather_dir)
+        self.assertEqual(set(sources), set(mod.SITES))
+        self.assertEqual(hashes, mod.PINNED_WEATHER_SHA256)
+        self.assertEqual(len(sources), 2)
+
+    def test_tampered_pinned_weather_is_not_silently_accepted(self):
+        original = Path(__file__).resolve().parents[1] / (
+            "datasets/wofost_potato_m1_16/weather")
+        if not original.is_dir():
+            self.skipTest("First NASA snapshot not yet published")
+        with tempfile.TemporaryDirectory() as td:
+            for label in mod.SITES:
+                (Path(td)/(label+".json")).write_bytes(
+                    (original/(label+".json")).read_bytes())
+            with (Path(td)/"neuquen.json").open("ab") as f:
+                f.write(b" ")
+            with self.assertRaisesRegex(ValueError,"SHA-256 changed"):
+                mod.load_weather(td)
+
     def test_scenarios_are_explicitly_uncalibrated_and_not_genotypes(self):
         self.assertEqual(mod.CROP,"potato")
         self.assertEqual(mod.VARIETY,"Potato_701")
