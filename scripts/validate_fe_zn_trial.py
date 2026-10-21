@@ -55,7 +55,10 @@ def inspect(path: Path) -> dict:
     meta={}
     env_gen=defaultdict(set)
     plot_source=set()
+    physical_plot_owners={}
     for index,r in enumerate(records,2):
+        if None in r or any(r.get(field) is None for field in FIELDS):
+            raise ValueError(f"Malformed CSV row at line {index}: unexpected or missing field")
         if any(not str(r[field]).strip() for field in FIELDS):
             raise ValueError(f"Missing value at CSV line {index}: empty cannot become zero")
         if r["trait"] not in TRAITS:
@@ -68,6 +71,13 @@ def inspect(path: Path) -> dict:
         if not r["genotype_id"].strip() or not r["location_id"].strip() or not r["season_id"].strip():
             raise ValueError("Missing genotype or environment")
         key=(r["trial_id"],r["location_id"],r["season_id"],r["genotype_id"],r["block_id"],r["plot_id"])
+        # The same physical plot cannot carry two different genotypes: treating
+        # them as separate biological replicates would manufacture independence.
+        physical=(r["trial_id"],r["location_id"],r["season_id"],r["block_id"],r["plot_id"])
+        prior=physical_plot_owners.get(physical)
+        if prior is not None and prior!=r["genotype_id"]:
+            raise ValueError("Physical plot assigned to different genotypes in the same block")
+        physical_plot_owners[physical]=r["genotype_id"]
         if r["trait"] in plots[key]:
             raise ValueError(f"Duplicate plot-trait analytical value at line {index}")
         plots[key][r["trait"]]=observed
