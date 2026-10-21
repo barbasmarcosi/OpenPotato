@@ -6,6 +6,8 @@ on:
     paths:
       - "scripts/validate_sample_lineage.py"
       - "tests/test_validate_sample_lineage.py"
+      - "scripts/create_sample_lineage_templates.py"
+      - "tests/test_create_sample_lineage_templates.py"
       - ".github/workflows/m1-sample-lineage.yml"
   workflow_dispatch:
 
@@ -25,6 +27,13 @@ jobs:
         env:
           PYTHONPATH: .:src:tests
         run: python -m unittest discover -s tests -v
+      - name: Verify blank templates contain no source observations
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.create_sample_lineage_templates --out /tmp/m1-14-empty-intake
+          test "$(wc -l < /tmp/m1-14-empty-intake/plots.csv)" -eq 1
+          test "$(wc -l < /tmp/m1-14-empty-intake/samples.csv)" -eq 1
       - name: Run CLI on explicitly synthetic plots and inspect privacy-safe report
         env:
           PYTHONPATH: .:src:tests
