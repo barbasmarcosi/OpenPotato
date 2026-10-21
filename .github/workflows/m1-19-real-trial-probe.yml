@@ -115,6 +115,61 @@ jobs:
               json.dumps(report,ensure_ascii=False,sort_keys=True,indent=2)+"\n",
               encoding="utf-8")
           PY
+      - name: Audit measured numeric availability versus literal NA, and read variable dictionary
+        run: |
+          python -m pip install "openpyxl==3.1.5"
+          python - <<'PY'
+          import collections,csv,hashlib,io,json,math,pathlib,urllib.request
+          from openpyxl import load_workbook
+          root=pathlib.Path("/tmp/m1-19-discovery")
+          verified={"Plotspecific_processed.csv":(10850227,"bdf0f745e2c496868e3285a43df0ff04"),
+                    "Plotspecific_processed_meta.xlsx":(10850226,"71fd84275db40cc56b3ba14427efb8f5")}
+          data={}
+          for name,(fid,md5) in verified.items():
+              with urllib.request.urlopen(urllib.request.Request(
+                 f"https://dataverse.harvard.edu/api/access/datafile/{fid}",
+                 headers={"User-Agent":"OpenPotato-M1-19-PrivateProcessing/0.1"}),timeout=60) as r:
+                  raw=r.read()
+              assert hashlib.md5(raw).hexdigest()==md5
+              data[name]=raw
+          rows=list(csv.DictReader(io.StringIO(data["Plotspecific_processed.csv"].decode("utf-8-sig"))))
+          desired=["Year","Date","Location","Plotnumber","Cultivar","Nitrogen","Irrigation","Shadow",
+                    "Yield_gross_t.ha","FWyield","tubersFW","tubersDW","tuberDMpercentage","LAI"]
+          def numeric(v):
+              try:
+                  x=float(v)
+                  return math.isfinite(x)
+              except (TypeError,ValueError):return False
+          counts={col:{"numeric":sum(numeric(r[col]) for r in rows),
+                       "na_marker":sum(r[col].strip().upper() in ("NA","NAN","NULL","") for r in rows)}
+                  for col in desired}
+          combos=collections.Counter((r["Year"],r["Location"]) for r in rows)
+          print("MEASURED_VALUE_COVERAGE",json.dumps(counts,sort_keys=True),flush=True)
+          print("SITE_YEAR_COUNTS",json.dumps([{"year":y,"location":loc,"count":n}
+                                               for (y,loc),n in sorted(combos.items())]),flush=True)
+          wb=load_workbook(io.BytesIO(data["Plotspecific_processed_meta.xlsx"]),read_only=True,data_only=True)
+          sheet=wb.active
+          head=[list(row) for row in sheet.iter_rows(min_row=1,max_row=7,values_only=True)]
+          print("META_DICTIONARY_FIRST_SEVEN_STRUCTURAL_ROWS",json.dumps(
+              head,ensure_ascii=False,default=str)[:4200],flush=True)
+          selected=[]
+          for row in sheet.iter_rows(values_only=True):
+              vals=[str(x)[:280] for x in row if x is not None]
+              if vals and any(any(key.lower() in v.lower() for key in
+                 ("tubersDW","tuberDMpercentage","Yield_gross_t.ha","FWyield","tubersFW"))
+                 for v in vals):
+                  selected.append(vals[:6])
+          print("META_DICTIONARY_SELECTED_UNIT_DEFS",json.dumps(selected[:20],ensure_ascii=False),flush=True)
+          result={"source":"doi:10.7910/DVN/1LC6W7","license":"CC BY-NC-SA 4.0",
+                  "measured_numeric_field_counts":counts,
+                  "site_year_counts":[{"year":y,"location":loc,"row_count":n}
+                                      for (y,loc),n in sorted(combos.items())],
+                  "dictionary_matching_variable_definitions":selected[:20],
+                  "original_plot_rows_exported":False,
+                  "warning":"Metadata and column coverages only; never infer units or independence from these counts."}
+          (root/"real_field_numeric_availability.json").write_text(
+              json.dumps(result,indent=2,ensure_ascii=False,sort_keys=True)+"\n")
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: M1-19-harvard-dataverse-metadata-only
