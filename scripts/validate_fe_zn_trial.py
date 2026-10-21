@@ -48,6 +48,11 @@ def inspect(path: Path) -> dict:
         records=list(reader)
     if not records:
         raise ValueError("Empty dataset")
+    # Reject malformed records BEFORE the trial identity check: DictReader
+    # represents surplus cells under the None key and missing cells as None.
+    for index, r in enumerate(records, 2):
+        if None in r or any(r.get(field) is None for field in FIELDS):
+            raise ValueError(f"Malformed CSV row at line {index}: unexpected or missing field")
     trials={r["trial_id"] for r in records}
     if len(trials)!=1 or not next(iter(trials)):
         raise ValueError("Exactly one declared trial_id is required")
@@ -57,8 +62,6 @@ def inspect(path: Path) -> dict:
     plot_source=set()
     physical_plot_owners={}
     for index,r in enumerate(records,2):
-        if None in r or any(r.get(field) is None for field in FIELDS):
-            raise ValueError(f"Malformed CSV row at line {index}: unexpected or missing field")
         if any(not str(r[field]).strip() for field in FIELDS):
             raise ValueError(f"Missing value at CSV line {index}: empty cannot become zero")
         if r["trait"] not in TRAITS:
