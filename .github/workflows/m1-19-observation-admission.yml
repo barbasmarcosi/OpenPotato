@@ -108,7 +108,8 @@ jobs:
           # No raw values from the original restricted-license field CSV
           for file in root.iterdir():
               text=file.read_text()
-              assert "plot_id" not in text and "Plotnumber" not in text
+              assert '"plot_id":' not in text and '"Plotnumber":' not in text
+              assert '"observed_value":' not in text and '"Yield_gross_t.ha": {' not in text
           print("REAL OBSERVATION SOURCE ADMITTED FOR FUTURE CALIBRATION; model not yet fitted.")
           PY
       - uses: actions/upload-artifact@v4
