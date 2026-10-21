@@ -57,6 +57,12 @@ jobs:
             assert hashlib.sha256((root/key).read_bytes()).hexdigest()==digest
           assert all(float(row["water_limited_storage_dry_kg_ha"])>=0 for row in rows)
           assert all(row["irrigation_mm_assumed"]=="0" for row in rows)
+          assert all(float(row["nasa_cumulative_rainfall_cm_during_simulated_days"])>=0 for row in rows)
+          assert all(float(row["total_actual_transpiration_cm"])>=0 for row in rows)
+          assert all(int(row["days_with_RFTRA_below_0_99"])>=0 for row in rows)
+          assert all(int(row["days_with_RFTRA_below_0_99"])<=int(row["days_simulated"]) for row in rows)
+          assert m["daily_transpiration_cm_summed_from_WOFOST_TRA"] is True
+          assert m["water_stress_days_defined_RFTRA_lt_0_99"] is True
           assert all(row["interpretation"]==m["status"] for row in rows)
           assert "genotype_id" not in rows[0] and "iron" not in rows[0] and "zinc" not in rows[0]
           print("WATER SENSITIVITY VERIFIED: 48 explicit counterfactuals only")
