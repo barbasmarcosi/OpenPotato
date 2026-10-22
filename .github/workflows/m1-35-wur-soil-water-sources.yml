@@ -61,14 +61,23 @@ jobs:
       - name: M1-35 audit original water data without exporting measurements
         env: {PYTHONPATH: ".:src"}
         run: |
-          python -m scripts.wur_soil_water_source_inventory --groundwater /tmp/m1-35-private-Groundwaterlevel.xlsx --waterpotential /tmp/m1-35-private-Waterpotential.xlsx --out /tmp/m1-35-safe-structure --bootstrap-unpinned-inventory
+          python -m scripts.wur_soil_water_source_inventory --groundwater /tmp/m1-35-private-Groundwaterlevel.xlsx --waterpotential /tmp/m1-35-private-Waterpotential.xlsx --out /tmp/m1-35-safe-structure
           python - <<'PY'
           import json,pathlib
           p=pathlib.Path('/tmp/m1-35-safe-structure/m1_35_wur_soil_observations_source_inventory.json')
           r=json.loads(p.read_text())
           assert r['source_license']=='CC BY-NC-SA 4.0'
           assert len(r['sources'])==2
-          assert all(x['number_of_sheets']>=1 for x in r['sources'])
+          assert all(x['source_digest_independently_pinned'] for x in r['sources'])
+          files={x['kind']:x for x in r['sources']}
+          assert files['groundwater']['source_sha256']=='7c546ba5493fa28bb073073071ff44be562e89d4401467caefe73b82911f65de'
+          assert files['waterpotential']['source_sha256']=='7a6924d01eff020215a1aca9c7de36fa4d97b33a0e99cfcf330127bedcfdec15'
+          assert [(x['physical_rows'],x['physical_columns']) for x in files['groundwater']['sheet_structures']]==[(5,3),(141,4)]
+          assert [(x['physical_rows'],x['physical_columns']) for x in files['waterpotential']['sheet_structures']]==[(187,7),(8237,38),(8078,35),(7470,26),(6672,24)]
+          assert files['groundwater']['sheet_structures'][1]['typed_or_ISO_date_cells_by_year']=={'2019':100,'2020':40}
+          assert [x['typed_or_ISO_date_cells_by_year'] for x in files['waterpotential']['sheet_structures'][1:]]==[
+             {'2019':7666},{'2019':7708},{'2020':6894},{'2020':6671}]
+          assert all(not x['field_soil_parameters_derived'] for x in r['sources'])
           assert r['raw_individual_soil_values_exported']==0
           assert r['raw_header_text_exported']==0
           assert not r['WOFOST_field_soil_provider_approved']
