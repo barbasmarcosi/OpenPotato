@@ -160,6 +160,8 @@ jobs:
         env:
           PYTHONPATH: .:src
         run: |
+          mkdir -p /tmp/m1-27-private-pcse-home
+          export HOME=/tmp/m1-27-private-pcse-home
           python -m scripts.wur_pcse_weather_provider_smoke --lelystad /tmp/Weatherfile_lelystad.xlsx --vredepeel /tmp/Weatherfile_vredepeel.xlsx --out /tmp/m1-22-source-counts
           python - <<'PY'
           import json,pathlib
@@ -175,7 +177,9 @@ jobs:
           PY
       - name: Delete source weather workbooks regardless of success
         if: always()
-        run: rm -f /tmp/Weatherfile_lelystad.xlsx /tmp/Weatherfile_vredepeel.xlsx
+        run: |
+          rm -f /tmp/Weatherfile_lelystad.xlsx /tmp/Weatherfile_vredepeel.xlsx
+          rm -rf /tmp/m1-27-private-pcse-home
       - uses: actions/upload-artifact@v4
         with:
           name: m1-22-original-WUR-climate-chronology-COUNTS-only
