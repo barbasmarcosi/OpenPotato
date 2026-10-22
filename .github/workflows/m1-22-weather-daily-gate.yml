@@ -1,0 +1,72 @@
+name: M1-22 WUR source weather chronology and strict unit gates
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - '.github/workflows/m1-22-weather-daily-gate.yml'
+      - 'scripts/wur_weather_daily_gate.py'
+      - 'tests/test_wur_weather_daily_gate.py'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-chronology:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Excel-only scientific input dependency
+        run: python -m pip install openpyxl==3.1.5
+      - name: Reject invalid dates, physical units and weather before any crop model
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -p 'test_wur_weather_daily_gate.py' -v
+      - name: Fetch and hash-lock original public WUR XLSX with license/version checks
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,urllib.parse,urllib.request
+          base='https://dataverse.harvard.edu/api'
+          doi='doi:10.7910/DVN/1LC6W7'
+          req=urllib.request.Request(base+'/datasets/:persistentId/?persistentId='+urllib.parse.quote(doi,safe=''),headers={'User-Agent':'OpenPotato-M1-22-WeatherChronology/1.0'})
+          with urllib.request.urlopen(req,timeout=50) as f: obj=json.load(f)
+          if obj.get('status')!='OK':raise ValueError('Dataverse source unavailable')
+          version=obj['data']['latestVersion']
+          if (version.get('versionNumber'),version.get('versionMinorNumber'))!=(3,0):raise ValueError('Source version changed')
+          if version.get('license',{}).get('name')!='CC BY-NC-SA 4.0':raise ValueError('Source rights changed')
+          files={r['dataFile']['id']:r for r in version['files']}
+          expected={10284792:('Weatherfile_lelystad.xlsx','ad66a23468a969b5795a656fb6989499e790a3e18179b9e3158f203b12ab8636'),
+                    10284786:('Weatherfile_vredepeel.xlsx','0bb40a5aa91ae6bfd02a8e8b4f825e4d834207884c1f2f44caa12fd0e88a1fd6')}
+          for id,(filename,sha) in expected.items():
+              row=files.get(id)
+              if not row or row.get('restricted',row['dataFile'].get('restricted',True)) or row['dataFile']['filename']!=filename:
+                  raise ValueError('Public license/file identification changed')
+              req=urllib.request.Request(base+'/access/datafile/'+str(id),headers={'User-Agent':'OpenPotato-M1-22-WeatherChronology/1.0'})
+              with urllib.request.urlopen(req,timeout=50) as f: blob=f.read()
+              if hashlib.sha256(blob).hexdigest()!=sha:raise ValueError('Source XLSX SHA256 changed')
+              pathlib.Path('/tmp/'+filename).write_bytes(blob)
+          print('Verified WUR original public weather XLSX v3.0 and CC BY-NC-SA; private runner only')
+          PY
+      - name: Audit exact original climate workbook chronological coverage without publishing daily weather
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.wur_weather_daily_gate --lelystad /tmp/Weatherfile_lelystad.xlsx --vredepeel /tmp/Weatherfile_vredepeel.xlsx --out /tmp/m1-22-source-counts
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('/tmp/m1-22-source-counts/m1_22_weather_chronology_metadata_only.json')
+          r=json.loads(p.read_text())
+          assert len(r['sites'])==2 and not r['field_wofost_run_admissible']
+          assert r['source_daily_weather_values_exported']==r['source_worksheet_rows_exported']==0
+          assert r['license']=='CC BY-NC-SA 4.0'
+          print('Audit completed: field WOFOST admission remains closed')
+          PY
+      - name: Delete source weather workbooks regardless of success
+        if: always()
+        run: rm -f /tmp/Weatherfile_lelystad.xlsx /tmp/Weatherfile_vredepeel.xlsx
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m1-22-original-WUR-climate-chronology-COUNTS-only
+          retention-days: 14
+          path: /tmp/m1-22-source-counts/m1_22_weather_chronology_metadata_only.json
