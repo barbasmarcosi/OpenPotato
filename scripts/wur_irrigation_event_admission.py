@@ -21,7 +21,7 @@ FIELD_SIGNATURE={
  "W1":r"irrigat|watergift|waterapp",
  "W2":r"irrigat|watergift|waterapp",
 }
-W_CODES={"W1":r"(?<!\w)w\s*1(?!\w)","W2":r"(?<!\w)w\s*2(?!\w)"}
+W_CODES={"W1":r"(?<![a-z0-9])w\s*1(?![a-z0-9])","W2":r"(?<![a-z0-9])w\s*2(?![a-z0-9])"}
 UNIT_PATTERNS={
  "mm":r"(?<![a-z])mm(?![a-z])|\bmillimet(?:re|er)",
  "cm":r"(?<![a-z])cm(?![a-z])|\bcentimet(?:re|er)",
