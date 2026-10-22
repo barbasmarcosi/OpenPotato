@@ -17,7 +17,7 @@ from collections import Counter
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from scripts.wur_weather_readiness import FILES, LICENSE
+LICENSE = "CC BY-NC-SA 4.0"
 
 METRIC_FIELDS = ("IRRAD", "TMIN", "TMAX", "VAP", "RAIN", "WIND", "E0", "ES0", "ET0")
 FIELDS = ("DAY",) + METRIC_FIELDS
@@ -102,6 +102,7 @@ def _date_column(sheet):
 def inspect_original_weather(blobs):
     """Use original checksums; public result has no cell values or original names."""
     from openpyxl import load_workbook
+    from scripts.wur_weather_readiness import FILES
     if set(blobs) != set(FILES):
         raise ValueError("Both official weather files are mandatory")
     sites = []
