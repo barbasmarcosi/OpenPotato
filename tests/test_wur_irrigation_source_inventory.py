@@ -17,10 +17,11 @@ class InventoryTests(unittest.TestCase):
         data.append([date(2019,5,1),"FAKE-SITE","FAKE-PLOT",20.])
         b=io.BytesIO();w.save(b);w.close();return b.getvalue()
     def test_outputs_only_positional_counts_no_header_or_field_values(self):
-        r=m.inspect_irrigation(self.fake())
+        fake=self.fake()
+        r=m.inspect_irrigation(fake,expected_sha=hashlib.sha256(fake).hexdigest())
         self.assertEqual(r["sheet_count"],2)
         self.assertFalse(r["real_wofost_irrigation_schedule_ready"])
-        self.assertFalse(r["checksum_independently_pinned_before_publication"])
+        self.assertTrue(r["checksum_independently_pinned_before_publication"])
         self.assertEqual(r["sheet_structures"][1]["typed_or_ISO_2019_2020_dates_found_by_year"]["2019"],1)
         text=str(r)
         for banned in ("FAKE-PLOT","FAKE-SITE","no real field rows","20.0"):
@@ -35,5 +36,5 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(m.parse_date("2019-05-01"),date(2019,5,1))
     def test_wrong_bytes_fails_closed(self):
         with self.assertRaisesRegex(ValueError,"invalid"):
-            m.inspect_irrigation(b"NOT A VALID XLSX")
+            m.inspect_irrigation(b"NOT A VALID XLSX",expected_sha=hashlib.sha256(b"NOT A VALID XLSX").hexdigest())
 if __name__=="__main__":unittest.main()
