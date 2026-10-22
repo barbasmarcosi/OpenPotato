@@ -44,13 +44,27 @@ def sunshine_flag(value):
 def audit_sheet(ws):
     rows=list(ws.iter_rows(min_row=1,values_only=True))
     if len(rows)<100:raise ValueError("Source weather workbook unexpectedly small")
-    # Header structure from independent public diffwofost-tutorial and PCSE.
-    if len(rows)<12 or tuple(rows[9][:8])!=FIELDS:
-        raise ValueError("Original PCSE native field names/positions differ")
-    expected_units=[u.lower().replace(" ","") for u in UNITS]
-    units=[u.lower().replace(" ","") if isinstance(u,str) else ""
-           for u in rows[10][:8]]
-    if units!=expected_units:raise ValueError("Original weather input units differ")
+    # The upstream notebook selects fields BY NAME from row 10, not position.
+    # Recognize known PCSE labels only; never export unmatched original strings.
+    if len(rows)<12:raise ValueError("Weather header not found")
+    labels=rows[9]
+    indexes={}
+    for field in FIELDS:
+        matches=[i for i,v in enumerate(labels)
+                 if isinstance(v,str) and v.strip()==field]
+        if len(matches)!=1:
+            known={f:[i+1 for i,v in enumerate(labels)
+                      if isinstance(v,str) and v.strip()==f] for f in FIELDS}
+            raise ValueError("Missing or duplicate required PCSE weather field: "+
+                             field+"; whitelisted positions: "+str(known))
+        indexes[field]=matches[0]
+    expected_units={f:u.lower().replace(" ","") for f,u in zip(FIELDS,UNITS)}
+    matches={f:isinstance(rows[10][indexes[f]],str) and
+                 rows[10][indexes[f]].lower().replace(" ","")==expected_units[f]
+             for f in FIELDS}
+    if not all(matches.values()):
+        raise ValueError("Weather input units disagree for whitelisted fields: "+
+                         str([f for f,okay in matches.items() if not okay]))
     try:
         metadata=rows[7]
         lon,lat,elev,a,b=(float(metadata[i]) for i in range(5))
@@ -65,7 +79,7 @@ def audit_sheet(ws):
     measured=[]
     for record in rows[11:]:
         if not record:continue
-        d=day(record[0])
+        d=day(record[indexes["DAY"]])
         if d is None:raise ValueError("Unknown day in source series")
         measured.append((d,record))
     dates=[d for d,_ in measured]
@@ -77,12 +91,14 @@ def audit_sheet(ws):
         raise ValueError("Original year coverage changed")
     if max(map(len,rows))!=10:raise ValueError("Original physical weather columns changed")
     essential={f:{"2019":Counter(),"2020":Counter()} for f in MANDATORY}
-    extra={col:{"2019":Counter(),"2020":Counter()} for col in (9,10)}
+    unused=[i for i in range(10) if i not in set(indexes.values())]
+    extra={i+1:{"2019":Counter(),"2020":Counter()} for i in unused}
     snow={"2019":Counter(),"2020":Counter()}
     for d,rec in measured:
         if d.year not in (2019,2020):continue
         y=str(d.year)
-        for idx,name in enumerate(FIELDS[1:],start=1):
+        for name in FIELDS[1:]:
+            idx=indexes[name]
             x=rec[idx] if idx<len(rec) else None
             missing=is_missing(x,sentinel)
             target=snow if name=="SNOWDEPTH" else essential[name]
@@ -94,9 +110,9 @@ def audit_sheet(ws):
                 lower=-65 if name in ("TMIN","TMAX") else 0
                 if not lower<=v<=upper:
                     raise ValueError("Original mandatory weather outside physical range")
-        for col in (9,10):
-            x=rec[col-1] if col-1<len(rec) else None
-            extra[col][y]["missing" if is_missing(x,sentinel) else "numeric"]+=1
+        for idx in unused:
+            x=rec[idx] if idx<len(rec) else None
+            extra[idx+1][y]["missing" if is_missing(x,sentinel) else "numeric"]+=1
     def dump(counter):
         return {k:{yr:dict(v) for yr,v in years.items()} for k,years in counter.items()}
     mandatory_ok=all(
@@ -106,8 +122,8 @@ def audit_sheet(ws):
     return {
         "schema_exact_native_pcse":True,
         "source_units_exact_pcse_excel_input":True,
-        "pcse_source_columns_one_based":{f:i+1 for i,f in enumerate(FIELDS)},
-        "unused_source_columns_one_based":[9,10],
+        "pcse_source_columns_one_based":{f:indexes[f]+1 for f in FIELDS},
+        "unused_source_columns_one_based":[i+1 for i in unused],
         "sunshine_hours_mode_from_source_header":sunshine,
         "original_daily_count":len(measured),
         "mandatory_2019_2020_complete":mandatory_ok,
