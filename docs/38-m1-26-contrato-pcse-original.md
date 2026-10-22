@@ -8,7 +8,13 @@ La implementación pública https://github.com/ronvree/diffwofost-tutorial ya im
 
 El notebook público contempla la fila 10 como encabezado y 11 como unidades; entradas DAY, IRRAD, TMIN, TMAX, VAP, WIND, RAIN, SNOWDEPTH, en posiciones 1–8. PCSE ExcelWeatherDataProvider acepta irradiación kJ/m²/día u horas de sol, temperaturas °C, VAP kPa, WIND m/s, RAIN mm, nieve cm; convierte a unidades internas y calcula las tres evaporaciones de referencia E0/ES0/ET0. Documentación oficial: https://pcse.readthedocs.io/en/stable/_modules/pcse/input/excelweatherdataprovider.html .
 
-El nuevo archivo scripts/wur_pcse_source_contract.py **comprueba estas posiciones, unidades y disponibilidad directamente en los Excel originales de hash fijado**. No infiere el significado de las columnas auxiliares 9 y 10 y no redistribuye su información. Si el original contradice el contrato, detiene la CI. Las ausencias detectadas en la columna 10 no prueban falta de una de las seis variables obligatorias del lector Excel; sólo cuando la fuente hash-verificada concuerde podemos concluir que es un campo no consumido por este adaptador.
+El nuevo archivo scripts/wur_pcse_source_contract.py comprueba las correspondencias por NOMBRE exacto, las unidades de entrada y la disponibilidad directamente en los Excel originales de hash fijado. No infiere el significado de las columnas auxiliares 9 y 10 y no redistribuye su información. Si el original contradice el contrato, detiene la CI. Las ausencias detectadas en la columna 10 no prueban falta de una de las seis variables obligatorias del lector Excel; sólo cuando la fuente hash-verificada concuerde podemos concluir que es un campo no consumido por este adaptador.
+
+## Resultado verificado con la fuente primaria
+
+[Action original M1-26/M1-27 exitosa](https://github.com/barbasmarcosi/OpenPotato/actions/runs/39715050232): seis campos meteorológicos obligatorios de PCSE completos en 2019 y 2020 para ambas estaciones; campos no utilizados en posiciones **8 y 10**, en ambos libros. La posición 10 es la que registra los 92 faltantes de Lelystad; esto no afecta la cobertura de las variables obligatorias del adaptador verificado.
+
+[Suite general](https://github.com/barbasmarcosi/OpenPotato/actions/runs/39715052748): exitosa. El extractor de metadatos mantiene aviso de no validación agronómica.
 
 ## Limitaciones y próxima etapa
 
