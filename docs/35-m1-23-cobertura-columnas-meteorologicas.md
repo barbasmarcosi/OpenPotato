@@ -10,6 +10,20 @@ El módulo [wur_weather_column_audit.py](../scripts/wur_weather_column_audit.py)
 
 La variable date y sus 731 días de 2019–2020 son información estructural; no se publica ni una fecha individual de medición de campo, coordenada, serie meteorológica, XLSX, hoja original ni valor de clima por sitio/día.
 
+
+## Resultado auténtico de los XLSX — 21 de octubre de 2026
+
+[CI M1-23 con originales auditados](https://github.com/barbasmarcosi/OpenPotato/actions/runs/39710932948):
+
+| Sitio | Fechas auditadas 2019–2020 | Columnas físicas con 731/731 numéricos | Otras columnas |
+|---|---:|---:|---|
+| Lelystad | 731 | 8 de 9 (posiciones 2–9) | **Posición 10: 639 numéricos y 92 ausentes/NA** |
+| Vredepeel | 731 | 9 de 9 (posiciones 2–10) | Sin ausentes numéricos detectados |
+
+Las posiciones de columna son índices del XLSX fuente, no nombres de variables validados. El hecho de que 92 registros de la columna 10 en Lelystad sean ausentes **no autoriza identificar el fenómeno, su causa ni su método de imputación**. Tampoco significa que todas las otras columnas tengan unidades compatibles con WOFOST. El identificador de columna, en lugar del encabezado original o dato diario, es lo que se publica.
+
+Las series y encabezados originales permanecen bajo CC BY-NC-SA 4.0 en el runner transitorio, no en GitHub. Esta auditoría valida únicamente cobertura numérica y trazabilidad de archivo; **no calibración ni validación de WOFOST**.
+
 ## Puerta científica
 
 - Los conteos físicos completos NO acreditan el sensor, altura del anemómetro, unidades de irradiación, presión de vapor real ni definición de ET0/E0/ES0. ETref Makkink no puede equipararse silenciosamente a todas las necesidades de PCSE.
