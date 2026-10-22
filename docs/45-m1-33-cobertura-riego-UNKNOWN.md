@@ -1,0 +1,7 @@
+M1-33 — Fuente original WUR: calendario de riego y UNKNOWN
+
+El archivo Irrigation.xlsx es el original verificado de ten Den et al. (2024), Harvard Dataverse v3, DOI https://doi.org/10.7910/DVN/1LC6W7, licencia CC BY-NC-SA 4.0. La siembra procede de la tabla 3 del artículo DOI https://doi.org/10.18174/odjar.v10i0.18680. Los últimos muestreos provienen de M1-20/28; NO se asume que sean cosechas comerciales.
+
+El módulo scripts/wur_irrigation_trial_window_coverage.py computa únicamente resúmenes por localidad y campaña para antes de la siembra, desde siembra hasta última medición, y después de ésta. Separa días con fuente, días del calendario sin fila, celdas W1/W2 positivas, ceros explícitos y blancos UNKNOWN. Días sin registro son también UNKNOWN; no se imputan cero aplicaciones ni cantidades de agua. No se publican dosis, registros originales, fechas individuales ni parcelas. La salida deja WOFOST inadmisible por falta de unidad, significado del blanco, suelo, cultivar, emergencia y parámetros reales.
+
+M1-32 verificó lluvia del registro frente a Weatherfile con relación diaria 10x en 526/526 días. Ese hecho no confirma unidad de los campos W1/W2. El artículo sólo describe riego por goteo controlado por potencial de agua del suelo y dos regímenes pF. Se requiere documentación del laboratorio o aclaración de autores sobre unidad de W1/W2 (mm, cm o volumen por superficie) y qué representa ausencia de valor, antes de autorizar un evento físico en PCSE. No usar biomasa 2020 para calibración.
