@@ -6,6 +6,8 @@ on:
       - '.github/workflows/m1-22-weather-daily-gate.yml'
       - 'scripts/wur_weather_daily_gate.py'
       - 'tests/test_wur_weather_daily_gate.py'
+      - 'scripts/wur_weather_column_audit.py'
+      - 'tests/test_wur_weather_column_audit.py'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
@@ -22,7 +24,9 @@ jobs:
       - name: Reject invalid dates, physical units and weather before any crop model
         env:
           PYTHONPATH: .:src
-        run: python -m unittest discover -s tests -p 'test_wur_weather_daily_gate.py' -v
+        run: |
+          python -m unittest discover -s tests -p 'test_wur_weather_daily_gate.py' -v
+          python -m unittest discover -s tests -p 'test_wur_weather_column_audit.py' -v
       - name: Fetch and hash-lock original public WUR XLSX with license/version checks
         run: |
           python - <<'PY'
@@ -62,6 +66,20 @@ jobs:
           assert r['license']=='CC BY-NC-SA 4.0'
           print('Audit completed: field WOFOST admission remains closed')
           PY
+      - name: Count missing/nonfinite values by source weather column without exporting data
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.wur_weather_column_audit --lelystad /tmp/Weatherfile_lelystad.xlsx --vredepeel /tmp/Weatherfile_vredepeel.xlsx --out /tmp/m1-22-source-counts
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('/tmp/m1-22-source-counts/m1_23_weather_column_numeric_coverage.json')
+          r=json.loads(p.read_text())
+          assert len(r['sites'])==2 and not r['field_wofost_run_admissible']
+          assert r['original_daily_observation_values_exported']==0
+          assert r['original_header_strings_exported']==0
+          print('Numeric coverage metadata only; meteorological dictionary has NOT been validated')
+          PY
       - name: Delete source weather workbooks regardless of success
         if: always()
         run: rm -f /tmp/Weatherfile_lelystad.xlsx /tmp/Weatherfile_vredepeel.xlsx
@@ -69,4 +87,4 @@ jobs:
         with:
           name: m1-22-original-WUR-climate-chronology-COUNTS-only
           retention-days: 14
-          path: /tmp/m1-22-source-counts/m1_22_weather_chronology_metadata_only.json
+          path: /tmp/m1-22-source-counts/*.json
