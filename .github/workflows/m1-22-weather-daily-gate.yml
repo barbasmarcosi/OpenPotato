@@ -10,6 +10,8 @@ on:
       - 'tests/test_wur_weather_column_audit.py'
       - 'scripts/wur_weather_semantics_gate.py'
       - 'tests/test_wur_weather_semantics_gate.py'
+      - 'scripts/wur_weather_holdout_exposure.py'
+      - 'tests/test_wur_weather_holdout_exposure.py'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
@@ -30,6 +32,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_wur_weather_daily_gate.py' -v
           python -m unittest discover -s tests -p 'test_wur_weather_column_audit.py' -v
           python -m unittest discover -s tests -p 'test_wur_weather_semantics_gate.py' -v
+          python -m unittest discover -s tests -p 'test_wur_weather_holdout_exposure.py' -v
       - name: Fetch and hash-lock original public WUR XLSX with license/version checks
         run: |
           python - <<'PY'
@@ -103,6 +106,30 @@ jobs:
                       v=c['counts_by_year'][y]
                       assert v['finite_numeric']+v['missing_na']+v['untyped_nonfinite']==v['days']
           print('M1-24 meteorological readiness DENIED until units and management are independently reviewed')
+          PY
+      - name: M1-25 admission gate against last observed field sampling
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.wur_weather_holdout_exposure --lelystad /tmp/Weatherfile_lelystad.xlsx --vredepeel /tmp/Weatherfile_vredepeel.xlsx --out /tmp/m1-22-source-counts
+          python - <<'PY'
+          import json,pathlib
+          f=pathlib.Path('/tmp/m1-22-source-counts/m1_25_weather_holdout_exposure_counts.json')
+          report=json.loads(f.read_text())
+          assert report['original_daily_weather_values_exported']==0
+          assert report['original_plot_data_exported']==0
+          assert report['field_wofost_run_admissible'] is False
+          sites={s['site']:s for s in report['sites']}
+          assert set(sites)=={'Lelystad','Vredepeel'}
+          assert sites['Vredepeel']['columns_with_missing_or_invalid_cells']==[]
+          cols=sites['Lelystad']['columns_with_missing_or_invalid_cells']
+          assert len(cols)==1 and cols[0]['source_column_1_based']==10
+          y=cols[0]['coverage']['2020']
+          assert y['missing_na']==92 and y['invalid']==0
+          assert y['non_numeric_from_jan1_through_last_sample']==34
+          assert y['non_numeric_after_last_sample']==58
+          assert cols[0]['coverage']['2019']['missing_na']==0
+          print('M1-25: source-verified 34 missing through last sample + 58 after; no WOFOST validation')
           PY
       - name: Delete source weather workbooks regardless of success
         if: always()
