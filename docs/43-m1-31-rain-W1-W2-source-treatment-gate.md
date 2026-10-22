@@ -17,3 +17,21 @@ El reconocimiento de columna NO valida automáticamente la unidad física. Se bu
 ## Evidencia reproducible
 
 CI dedicated M1-31: verificar versión/licencia, hashes originales, el diccionario de fuente y las claves de tratamiento, ejecutar tests de datos ficticios, retirar archivos transitorios y publicar únicamente recuentos por sitio/año y campo. Un fallo de etiqueta, tipo o vínculo debe marcar la admisión como fallida, no inferir automáticamente valores.
+
+
+## Resultado real — fuentes con SHA verificadas
+
+[GitHub Actions M1-31](https://github.com/barbasmarcosi/OpenPotato/actions/runs/39720378861) aprobada. El diccionario de metadatos y las cabeceras originales identificaron lluvia (columna 4), W1 (columna 5) y W2 (columna 6). Los códigos de tratamiento coinciden con las asignaciones de las 174 parcelas-año del CSV original, sin utilizar rendimientos de 2020.
+
+| Localidad | Año | W1: parcelas / registros positivos | W2: parcelas / registros positivos | Días con lluvia positiva |
+|---|---|---|---|---:|
+| Lelystad | 2019 | 21 / 11 | 24 / 41 | 59 |
+| Vredepeel | 2019 | 21 / 74 | 21 / 77 | 48 |
+| Lelystad | 2020 | 21 / 9 | 24 / 30 | 59 |
+| Vredepeel | 2020 | 21 / 87 | 21 / 102 | 59 |
+
+Las cifras tras la barra son registros con valores positivos en el Excel, NO dosis en mm, NO registros necesariamente independientes por parcela. Los campos de riego contenían blancos; ninguno fue sustituido por cero. La lluvia presenta ceros explícitos, diferencia que no permite imputar los campos W1/W2.
+
+**Barrera científica identificada:** el metadato no permitió confirmar de forma inequívoca la unidad física de las cantidades de agua (estado AMBIGUOUS_OR_UNSPECIFIED). Aunque la correspondencia de nombres y clases de tratamiento está verificada, el cronograma WOFOST sigue inadmisible hasta determinar unidad, interpretación de las celdas vacías, dosis efectiva por superficie y suelo/cultivar/emergencia compatibles. El benchmark agronómico 2020 continúa reservado: ningún rendimiento 2020 fue utilizado para calibrar.
+
+No se publicaron fechas individuales, datos originales, volúmenes, IDs de parcelas ni eventos diarios.
