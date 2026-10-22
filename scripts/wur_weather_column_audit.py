@@ -98,9 +98,13 @@ def coverage_of_sheet(ws):
 
 
 def inspect_originals(blobs):
-    from openpyxl import load_workbook
     if set(blobs)!=set(EXPECTED_FILES):
         raise ValueError("Both source stations required")
+    # Even stdlib-only CI can reject invalid/missing sources before optional XLSX.
+    for station, expected_sha in EXPECTED_FILES.items():
+        if hashlib.sha256(blobs[station]).hexdigest()!=expected_sha:
+            raise ValueError("Original source digest mismatch")
+    from openpyxl import load_workbook
     result=[]
     for name,expected in EXPECTED_FILES.items():
         if hashlib.sha256(blobs[name]).hexdigest()!=expected:
