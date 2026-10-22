@@ -1,0 +1,86 @@
+name: M1-35 WUR original soil water observation source gate
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - ".github/workflows/m1-35-wur-soil-water-sources.yml"
+      - "scripts/wur_soil_water_source_inventory.py"
+      - "tests/test_wur_soil_water_source_inventory.py"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  verify-source-soil-water:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned source workbook parser
+        run: python -m pip install openpyxl==3.1.5
+      - name: Regression tests on fictional soil measurements
+        env: {PYTHONPATH: ".:src"}
+        run: python -m unittest discover -s tests -p 'test_wur_soil_water_source_inventory.py' -v
+      - name: Verify source version license file identities and MD5 hashes
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,urllib.parse,urllib.request
+          from scripts.wur_soil_water_source_inventory import ORIGINALS
+          base='https://dataverse.harvard.edu/api'
+          doi='doi:10.7910/DVN/1LC6W7'
+          url=base+'/datasets/:persistentId/?persistentId='+urllib.parse.quote(doi,safe='')
+          req=urllib.request.Request(url,headers={'User-Agent':'OpenPotato-M1-35-SoilWater/1.0'})
+          with urllib.request.urlopen(req,timeout=55) as f:r=json.load(f)
+          if r.get('status')!='OK':raise ValueError('Dataverse source unavailable')
+          v=r['data']['latestVersion']
+          if (v.get('versionNumber'),v.get('versionMinorNumber'))!=(3,0):
+              raise ValueError('Dataverse source version changed')
+          if v.get('license',{}).get('name')!='CC BY-NC-SA 4.0':
+              raise ValueError('Original Dataverse license changed')
+          by_id={x['dataFile']['id']:x for x in v['files']}
+          for kind,original in ORIGINALS.items():
+              entry=by_id.get(original['file_id'])
+              if not entry or entry.get('restricted',entry['dataFile'].get('restricted',True)):
+                  raise ValueError('Soil source missing or restricted: '+kind)
+              if entry['dataFile']['filename']!=original['filename']:
+                  raise ValueError('Original soil source name changed: '+kind)
+              expected_md5=entry['dataFile'].get('md5')
+              if not expected_md5:raise ValueError('Original dataset MD5 missing')
+              req=urllib.request.Request(base+'/access/datafile/'+str(original['file_id']),
+                  headers={'User-Agent':'OpenPotato-M1-35-SoilWater/1.0'})
+              with urllib.request.urlopen(req,timeout=90) as f:contents=f.read()
+              if hashlib.md5(contents).hexdigest()!=expected_md5:
+                  raise ValueError('Original soil workbook source MD5 changed')
+              sha=hashlib.sha256(contents).hexdigest()
+              if original['sha256'] and sha!=original['sha256']:
+                  raise ValueError('Independent soil workbook SHA256 changed')
+              pathlib.Path('/tmp/m1-35-private-'+original['filename']).write_bytes(contents)
+              print('Source identity/version/license/checksums verified for '+kind+'; SHA256 '+sha)
+          PY
+      - name: M1-35 audit original water data without exporting measurements
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m scripts.wur_soil_water_source_inventory --groundwater /tmp/m1-35-private-Groundwaterlevel.xlsx --waterpotential /tmp/m1-35-private-Waterpotential.xlsx --out /tmp/m1-35-safe-structure --bootstrap-unpinned-inventory
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('/tmp/m1-35-safe-structure/m1_35_wur_soil_observations_source_inventory.json')
+          r=json.loads(p.read_text())
+          assert r['source_license']=='CC BY-NC-SA 4.0'
+          assert len(r['sources'])==2
+          assert all(x['number_of_sheets']>=1 for x in r['sources'])
+          assert r['raw_individual_soil_values_exported']==0
+          assert r['raw_header_text_exported']==0
+          assert not r['WOFOST_field_soil_provider_approved']
+          assert not r['WOFOST_field_crop_run_approved']
+          assert not r['field_yield_errors_computed']
+          print('M1-35: source water observations inventoried, no hydraulic soil calibration authorized.')
+          PY
+      - name: Erase all ephemeral original workbooks
+        if: always()
+        run: rm -f /tmp/m1-35-private-Groundwaterlevel.xlsx /tmp/m1-35-private-Waterpotential.xlsx
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m1-35-wur-original-soil-SHEET-COUNTS-ONLY
+          retention-days: 14
+          path: /tmp/m1-35-safe-structure/m1_35_wur_soil_observations_source_inventory.json
