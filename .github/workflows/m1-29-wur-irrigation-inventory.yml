@@ -62,7 +62,8 @@ jobs:
           r=json.loads(pathlib.Path('/tmp/m1-29-safe-aggregates/m1_29_irrigation_workbook_structure_only.json').read_text())
           assert r['source_doi']=='10.7910/DVN/1LC6W7' and r['source_file_id']==10284791
           assert r['source_license']=='CC BY-NC-SA 4.0'
-          assert r['sheet_count']>0
+          assert r['sheet_count']==2 and r['checksum_independently_pinned_before_publication']
+          assert r['source_sha256']=='3def99dfb0643abe4d524431702a224bf62abd9489b306fbb89d54fdb3c9f109'
           assert not r['original_sheet_names_or_cell_values_exported']
           assert not r['plot_level_irrigation_dates_or_amounts_verified']
           assert not r['real_wofost_irrigation_schedule_ready']
