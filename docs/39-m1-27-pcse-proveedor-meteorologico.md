@@ -4,6 +4,12 @@ Fase de interoperabilidad, no de validación agronómica. Fuente: ten Den et al.
 
 El programa scripts/wur_pcse_weather_provider_smoke.py parte de los dos Excel originales SHA-verificados, comprueba nombres reales de columna (no posiciones supuestas), metadatos de estación, valores obligatorios y fechas. Reconstruye un libro meteorológico compatible con la especificación ExcelWeatherDataProvider dentro de una carpeta temporal y utiliza PCSE 6.0.13 para recuperar **cada uno de los 1.096 días originales por estación** (2018, 2019, 2020), incluidos E0/ES0/ET0 derivados por reference_ET. Ningún valor de meteorología sale del proceso; se guardan solo recuentos de días y hashes de fuente.
 
-El lector PCSE puede ignorar filas inválidas con advertencia: el chequeo posterior de cobertura exacta evita afirmar compatibilidad sobre una importación parcial. El proceso no ejecuta WOFOST, no entrena coeficientes, no publica observaciones ni prueba Fe/Zn, inocuidad, rendimiento o estabilidad. **La verificación del método de E0/ES0/ET0 y de la altura del viento sigue pendiente antes de hablar de una simulación de campo calibrada.**
+El lector PCSE puede ignorar filas inválidas con advertencia: el chequeo posterior de cobertura exacta evita afirmar compatibilidad sobre una importación parcial. El procesamiento etiqueta negativamente la nieve mediante el no-data sentinel declarado en el original al encontrar marcadores negativos propios del campo opcional SNOWDEPTH. No imputa ni cambia las seis variables obligatorias. El proceso no ejecuta WOFOST, no entrena coeficientes, no publica observaciones ni prueba Fe/Zn, inocuidad, rendimiento o estabilidad. **La verificación del método de E0/ES0/ET0 y de la altura del viento sigue pendiente antes de hablar de una simulación de campo calibrada.**
 
 Queda pendiente construir joins de suelo/agua/variedades y mantener 2020 exclusivamente reservado para validación del modelo, sin ajuste a posteriori.
+
+## Evidencia reproducible real
+
+- [GitHub Actions, ejecución con fuentes originales](https://github.com/barbasmarcosi/OpenPotato/actions/runs/39715050232) — **success**. PCSE 6.0.13 importó exactamente 1.096/1.096 días por estación (2018–2020), comprobando campos meteorológicos obligatorios y E0, ES0, ET0 finitos. No se publicaron mediciones.
+- [CI general sin dependencias externas obligatorias](https://github.com/barbasmarcosi/OpenPotato/actions/runs/39715052748) — **success**. El workflow científico instala dependencias fijadas solo en la ejecución dedicada.
+- La conversión probada es equivalente funcionalmente al objetivo de interoperabilidad del tutorial diffwofost, pero se desarrolló sin copiar su código. El indicador WOFOST_FIELD_VALIDATED permanece explícitamente falso.
