@@ -39,6 +39,47 @@ def whitelisted_tags(rows,limit):
   if tags:output[str(rownum)]=tags
  return output
 
+def verify_site_year_date_keys(rows):
+ """Site x year x day event-candidate identities, without source row export."""
+ sites={"lelystad":"Lelystad","l":"Lelystad",
+        "vredepeel":"Vredepeel","v":"Vredepeel"}
+ observed=set()
+ totals=Counter()
+ numeric=defaultdict(Counter)
+ for row in rows[1:]:
+  if len(row)!=6 or not isinstance(row[0],str):
+   raise ValueError("Malformed source location/site row")
+  site=sites.get(row[0].strip().lower())
+  if not site:raise ValueError("Unrecognized site label in original irrigation source")
+  year=row[1]
+  if isinstance(year,bool) or not isinstance(year,(int,float)) or year not in (2019,2020):
+   raise ValueError("Unrecognized source year")
+  d=parse_date(row[2])
+  if d is None or d.year!=int(year):
+   raise ValueError("Original year/date mismatch")
+  key=(site,int(year),d)
+  if key in observed:
+   raise ValueError("Duplicate site-year-day row, cannot infer irrigation event")
+  observed.add(key)
+  group=(site,str(int(year)))
+  totals[group]+=1
+  for i in (3,4,5):
+   v=row[i]
+   k=kind(v)
+   if k=="numeric" and v<0:raise ValueError("Negative source water-like value")
+   if k not in ("numeric","missing"):
+    raise ValueError("Unrecognized source water-like column cell")
+   numeric[group][(i+1,k)]+=1
+ if len(observed)!=526 or len(totals)!=4:
+  raise ValueError("Original site-year-day coverage changed")
+ return [
+  {"site":site,"year":year,"unique_site_year_days":totals[site,year],
+   "source_column_numeric_or_missing_counts":{
+    str(col):{kind:numeric[site,year][col,kind] for kind in ("numeric","missing")}
+    for col in (4,5,6)}}
+  for site,year in sorted(totals)
+ ]
+
 def inspect_sheets(meta,data):
  metarows=list(meta.iter_rows(values_only=True))
  rows=list(data.iter_rows(values_only=True))
@@ -82,7 +123,9 @@ def inspect_sheets(meta,data):
          "metadata_tags_by_position":whitelisted_tags(metarows,17),
          "data_first_rows_tags_by_position":whitelisted_tags(rows,15),
          "column_profiles":summaries,
-         "original_values_or_dates_exported":0}
+         "original_values_or_dates_exported":0,
+ "site_year_date_keys_verified":True,
+ "site_year_event_candidate_counts":verify_site_year_date_keys(rows)}
 
 def audit(blob):
  if hashlib.sha256(blob).hexdigest()!=EXPECTED_SHA256:
