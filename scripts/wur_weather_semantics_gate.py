@@ -177,9 +177,17 @@ def main():
     print(json.dumps({
         "status":report["status"],
         "site_missing_yearly":[{"site":s["site"],"columns":[
-            {"column":c["source_column_number"],"years":{
-                y: v["missing_na"]+v["untyped_nonfinite"]
-                for y,v in c["counts_by_year"].items()}}
+            {"column":c["source_column_number"],
+             "candidate_variable_words_NOT_verified":c["candidate_variable_words_NOT_verified"],
+             "candidate_unit_words_NOT_verified":c["candidate_unit_words_NOT_verified"],
+             "metadata_prefix_row_count":s["metadata_prefix_row_count"],
+             "years":{y:v["missing_na"]+v["untyped_nonfinite"]
+                      for y,v in c["counts_by_year"].items()},
+             "missing_quarters":{q:v["missing_na"]+v["untyped_nonfinite"]
+                                 for q,v in c["counts_by_quarter"].items()
+                                 if v["missing_na"] or v["untyped_nonfinite"]},
+             "max_run_by_year":{y:v["max_non_numeric_streak"]
+                                for y,v in c["counts_by_year"].items()}}
             for c in s["columns"] if any(
                 v["missing_na"] or v["untyped_nonfinite"]
                 for v in c["counts_by_year"].values())]}
