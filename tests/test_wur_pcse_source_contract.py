@@ -31,6 +31,18 @@ class WeatherContractTests(unittest.TestCase):
         self.assertEqual(r["unused_source_columns_one_based"],[9,10])
         self.assertFalse(r["wofost_crop_model_field_validated"])
         self.assertNotIn("NOT-PCSE-10",str(r))
+
+    def test_source_field_order_uses_labels_not_unverified_column_positions(self):
+        class Swapped(FakeSheet):
+            def iter_rows(self, *, min_row, values_only):
+                for row in super().iter_rows(min_row=min_row, values_only=values_only):
+                    v=list(row)
+                    v[7],v[8]=v[8],v[7]
+                    yield tuple(v)
+        report=m.audit_sheet(Swapped())
+        self.assertEqual(report["pcse_source_columns_one_based"]["SNOWDEPTH"],9)
+        self.assertEqual(report["unused_source_columns_one_based"],[8,10])
+        self.assertTrue(report["mandatory_2019_2020_complete"])
     def test_reject_modified_header(self):
         with self.assertRaisesRegex(ValueError,"Missing or duplicate"):
             m.audit_sheet(FakeSheet(bad_header=True))
