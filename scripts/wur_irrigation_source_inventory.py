@@ -19,7 +19,7 @@ SOURCE_ID=10284791
 SOURCE_NAME="Irrigation.xlsx"
 LICENSE="CC BY-NC-SA 4.0"
 # Digest to be independently pinned after initial source provenance review.
-EXPECTED_SHA256=None
+EXPECTED_SHA256="3def99dfb0643abe4d524431702a224bf62abd9489b306fbb89d54fdb3c9f109"
 TAGS={
     "date":r"\bdate\b|\bdatum\b|\bday\b",
     "year":r"\byear\b|\bjaar\b",
