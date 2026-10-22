@@ -80,6 +80,29 @@ def verify_site_year_date_keys(rows):
   for site,year in sorted(totals)
  ]
 
+def _semantic_fingerprints(rows):
+ """Publish only boolean matches for a FIXED controlled source vocabulary."""
+ rules={
+  "mentions_w1":r"(?<![a-z0-9])w\s*1(?![a-z0-9])",
+  "mentions_w2":r"(?<![a-z0-9])w\s*2(?![a-z0-9])",
+  "mentions_mm":r"(?<![a-z])mm(?![a-z])|millimet",
+  "mentions_rain":r"rain|neerslag|precip",
+  "mentions_irrigation":r"irrigat|watergift|watering",
+  "mentions_pF":r"(?<![a-z])pf\s*[23](?:[.,][24])?",
+  "mentions_day":r"date|datum|day",
+  "mentions_2019":r"(?<![0-9])2019(?![0-9])",
+  "mentions_2020":r"(?<![0-9])2020(?![0-9])",
+ }
+ result={}
+ for rowindex,row in enumerate(rows):
+  found=[]
+  for colindex,cell in enumerate(row):
+   if not isinstance(cell,str):continue
+   tags=[k for k,expr in rules.items() if re.search(expr,cell,re.I)]
+   if tags:found.append({"column":colindex+1,"matches":sorted(tags)})
+  if found:result[str(rowindex+1)]=found
+ return result
+
 def inspect_sheets(meta,data):
  metarows=list(meta.iter_rows(values_only=True))
  rows=list(data.iter_rows(values_only=True))
@@ -121,6 +144,8 @@ def inspect_sheets(meta,data):
  return {"meta_rows":17,"data_rows":527,"data_columns":6,
          "date_column_one_based":date_index+1,"date_counts_by_year":dict(counts),
          "metadata_tags_by_position":whitelisted_tags(metarows,17),
+         "source_metadata_semantic_fingerprints":_semantic_fingerprints(metarows),
+         "source_data_header_semantic_fingerprints":_semantic_fingerprints(rows[:1]),
          "data_first_rows_tags_by_position":whitelisted_tags(rows,15),
          "column_profiles":summaries,
          "original_values_or_dates_exported":0,
