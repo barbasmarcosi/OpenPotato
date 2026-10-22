@@ -15,19 +15,23 @@ def fake_sheets():
  rows=[("date","location","rainfall mm","W1","W2","private")]
  for year,n in ((2019,258),(2020,268)):
   for offset in range(n):
-   rows.append((date(year,1,1)+timedelta(days=offset),
-                "Lelystad" if year==2019 else "Vredepeel",
-                0 if offset%3 else 4,0 if offset%2 else 8,
-                0 if offset%5 else 12,"PRIVATE-RAW-VALUE"))
+   site="Lelystad" if offset%2==0 else "Vredepeel"
+   day=date(year,1,1)+timedelta(days=offset//2)
+   rows.append((site,year,day,
+                0 if offset%3 else 4,
+                None if offset%2 else 8,
+                None if offset%5 else 12))
  return MockSheet(meta,3),MockSheet(rows,6)
 
 class TypedIrrigationProbe(unittest.TestCase):
  def test_exact_date_axis_and_strict_whitelisted_no_source_export(self):
   r=m.inspect_sheets(*fake_sheets())
   self.assertEqual(r["date_counts_by_year"],{"2019":258,"2020":268})
-  self.assertEqual(r["date_column_one_based"],1)
-  self.assertEqual(r["column_profiles"][1]["controlled_site_treatment_category_counts"],
-                   {"Lelystad":258,"Vredepeel":268})
+  self.assertEqual(r["date_column_one_based"],3)
+  self.assertTrue(r["site_year_date_keys_verified"])
+  self.assertEqual(len(r["site_year_event_candidate_counts"]),4)
+  self.assertEqual(r["column_profiles"][0]["controlled_site_treatment_category_counts"],
+                   {"Lelystad":263,"Vredepeel":263})
   self.assertEqual(len(r["column_profiles"]),6)
   self.assertIn("mm",str(r["metadata_tags_by_position"]))
   self.assertEqual(r["original_values_or_dates_exported"],0)
@@ -49,15 +53,26 @@ class TypedIrrigationProbe(unittest.TestCase):
    m.inspect_sheets(meta,data)
  def test_ambiguous_double_date_column_blocks(self):
   meta,data=fake_sheets()
-  data.rows=[tuple([row[0],row[0],*row[2:]]) if isinstance(row[0],date) else row
+  data.rows=[(row[2],row[1],row[2],*row[3:]) if isinstance(row[2],date) else row
              for row in data.rows]
   with self.assertRaisesRegex(ValueError,"Ambiguous"):
    m.inspect_sheets(meta,data)
  def test_bad_date_coverage_fails(self):
   meta,data=fake_sheets()
-  data.rows[1]=(date(2018,1,1),)+data.rows[1][1:]
+  data.rows[1]=(data.rows[1][0],data.rows[1][1],date(2018,1,1),*data.rows[1][3:])
   with self.assertRaisesRegex(ValueError,"Date counts"):
    m.inspect_sheets(meta,data)
+
+ def test_same_site_year_day_collision_is_rejected(self):
+  meta,data=fake_sheets()
+  data.rows[3]=(data.rows[1][0],data.rows[1][1],data.rows[1][2],*data.rows[3][3:])
+  with self.assertRaisesRegex(ValueError,"Duplicate"):
+   m.verify_site_year_date_keys(data.rows)
+ def test_site_year_mismatch_rejected(self):
+  meta,data=fake_sheets()
+  data.rows[1]=(data.rows[1][0],2020,*data.rows[1][2:])
+  with self.assertRaisesRegex(ValueError,"year/date mismatch"):
+   m.verify_site_year_date_keys(data.rows)
  def test_original_text_not_assumed_semantically_valid(self):
   hints=m.whitelisted_tags([("SECRET","watergift","irrigation mm by treatment")],10)
   self.assertNotIn("SECRET",str(hints))
