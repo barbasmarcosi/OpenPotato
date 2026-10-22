@@ -1,0 +1,72 @@
+name: M1-21 Original Dutch weather workbooks source/readiness gate
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - '.github/workflows/m1-21-weather-source-readiness.yml'
+      - 'scripts/wur_weather_readiness.py'
+      - 'tests/test_wur_weather_readiness.py'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  weather-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deterministic local Excel reader
+        run: python -m pip install openpyxl==3.1.5
+      - name: Test contract exclusively with invented weather XLSX
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -p 'test_wur_weather_readiness.py' -v
+      - name: Check version/license/public accessibility and fetch original WUR workbooks
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,urllib.parse,urllib.request
+          base='https://dataverse.harvard.edu/api'
+          identifier='doi:10.7910/DVN/1LC6W7'
+          req=urllib.request.Request(base+'/datasets/:persistentId/?persistentId='+urllib.parse.quote(identifier,safe=''),headers={'User-Agent':'OpenPotato-M1-21-WeatherInventory/1.0'})
+          with urllib.request.urlopen(req,timeout=50) as res: metadata=json.load(res)
+          if metadata.get('status')!='OK': raise ValueError('Dataverse metadata unavailable')
+          version=metadata['data']['latestVersion']
+          if (version.get('versionNumber'),version.get('versionMinorNumber'))!=(3,0): raise ValueError('Dataset version changed')
+          if version.get('license',{}).get('name')!='CC BY-NC-SA 4.0': raise ValueError('Source license changed')
+          files={x['dataFile']['id']:x for x in version['files']}
+          expected={10284792:('Weatherfile_lelystad.xlsx','ad66a23468a969b5795a656fb6989499e790a3e18179b9e3158f203b12ab8636'),
+                    10284786:('Weatherfile_vredepeel.xlsx','0bb40a5aa91ae6bfd02a8e8b4f825e4d834207884c1f2f44caa12fd0e88a1fd6')}
+          for id,(filename,sha) in expected.items():
+              row=files.get(id)
+              if not row or row.get('restricted',row['dataFile'].get('restricted',True)) or row['dataFile']['filename']!=filename:
+                  raise ValueError('Original weather file identity/rights changed')
+              req=urllib.request.Request(base+'/access/datafile/'+str(id),headers={'User-Agent':'OpenPotato-M1-21-WeatherInventory/1.0'})
+              with urllib.request.urlopen(req,timeout=50) as res: blob=res.read()
+              if hashlib.sha256(blob).hexdigest()!=sha: raise ValueError('Original weather book SHA256 changed')
+              pathlib.Path('/tmp/'+filename).write_bytes(blob)
+          print('Verified both ORIGINAL XLSX files; source stays ephemeral, not an artifact')
+          PY
+      - name: Produce aggregate workbook structural inventory (not weather time series)
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.wur_weather_readiness --lelystad /tmp/Weatherfile_lelystad.xlsx --vredepeel /tmp/Weatherfile_vredepeel.xlsx --out /tmp/m1-21-safe-structure
+          python - <<'PY'
+          import json,pathlib
+          r=json.loads(pathlib.Path('/tmp/m1-21-safe-structure/wur_weather_workbook_structure.json').read_text())
+          assert len(r['sites'])==2
+          assert not r['ready_to_run_field_wofost']
+          assert not r['model_driver_units_and_daily_frequency_confirmed']
+          assert r['original_weather_cell_values_exported']==r['raw_daily_weather_records_exported']==0
+          print('Two XLSX structures verified. WOFOST still BLOCKED pending units/soil/management.')
+          PY
+      - name: Remove licensed original workbooks
+        if: always()
+        run: rm -f /tmp/Weatherfile_lelystad.xlsx /tmp/Weatherfile_vredepeel.xlsx
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m1-21-licensed-weatherbook-structure-only-no-real-wofost-validation
+          retention-days: 14
+          path: /tmp/m1-21-safe-structure/wur_weather_workbook_structure.json
