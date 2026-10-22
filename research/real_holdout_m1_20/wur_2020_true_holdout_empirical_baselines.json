@@ -9,6 +9,7 @@
     "mae_kg_dry_ha": 1333.399556,
     "rmse_kg_dry_ha": 1776.115667
   },
+  "baseline_algorithm_source_sha256": "adf777bceb9ea50c5f4191b78b0b1b070113935ea54d74d198318feba76eff2d",
   "completely_reserved_evaluation_year": "2020",
   "derivative_reuse": "Attribution to authors; CC BY-NC-SA 4.0; noncommercial/sharealike",
   "different_independent_evaluation_years": 1,
