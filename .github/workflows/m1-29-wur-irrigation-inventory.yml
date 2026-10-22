@@ -1,0 +1,78 @@
+name: M1-29 WUR original irrigation workbook structural audit
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - ".github/workflows/m1-29-wur-irrigation-inventory.yml"
+      - "scripts/wur_irrigation_source_inventory.py"
+      - "tests/test_wur_irrigation_source_inventory.py"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  source-irrigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pin Excel reader dependency for source inventory only
+        run: python -m pip install openpyxl==3.1.5
+      - name: Unit tests with invented weatherless irrigation workbook
+        env: {PYTHONPATH: ".:src"}
+        run: python -m unittest discover -s tests -p 'test_wur_irrigation_source_inventory.py' -v
+      - name: Verify public original irrigation file, version, license, and original checksum
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,urllib.parse,urllib.request
+          base='https://dataverse.harvard.edu/api'
+          doi='doi:10.7910/DVN/1LC6W7'
+          req=urllib.request.Request(
+              base+'/datasets/:persistentId/?persistentId='+urllib.parse.quote(doi,safe=''),
+              headers={'User-Agent':'OpenPotato-M1-29-IrrigationInventory/1.0'})
+          with urllib.request.urlopen(req,timeout=50) as f: obj=json.load(f)
+          if obj.get('status')!='OK':raise ValueError('Dataverse source missing')
+          meta=obj['data']['latestVersion']
+          if (meta.get('versionNumber'),meta.get('versionMinorNumber'))!=(3,0):
+              raise ValueError('Dataset revision changed')
+          if meta.get('license',{}).get('name')!='CC BY-NC-SA 4.0':
+              raise ValueError('Original source license changed')
+          original=next((x for x in meta['files'] if x['dataFile']['id']==10284791),None)
+          if not original or original.get('restricted',original['dataFile'].get('restricted',True)):
+              raise ValueError('Irrigation source access not verified')
+          data=original['dataFile']
+          if data['filename']!='Irrigation.xlsx' or not data.get('md5'):
+              raise ValueError('Irrigation source identity or source MD5 missing')
+          req=urllib.request.Request(base+'/access/datafile/10284791',
+                                    headers={'User-Agent':'OpenPotato-M1-29-IrrigationInventory/1.0'})
+          with urllib.request.urlopen(req,timeout=60) as f: content=f.read()
+          if hashlib.md5(content).hexdigest()!=data['md5']:
+              raise ValueError('Irrigation source bytes differ from Dataverse MD5')
+          pathlib.Path('/tmp/m1-29-licensed-original-Irrigation.xlsx').write_bytes(content)
+          print('Original irrigation file, version and CC BY-NC-SA 4.0 license verified')
+          print('New original irrigation SHA256 for independent follow-up pin:',hashlib.sha256(content).hexdigest())
+          PY
+      - name: Count only physical workbook structure and tentative header tokens
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m scripts.wur_irrigation_source_inventory --source /tmp/m1-29-licensed-original-Irrigation.xlsx --out /tmp/m1-29-safe-aggregates
+          python - <<'PY'
+          import json,pathlib
+          r=json.loads(pathlib.Path('/tmp/m1-29-safe-aggregates/m1_29_irrigation_workbook_structure_only.json').read_text())
+          assert r['source_doi']=='10.7910/DVN/1LC6W7' and r['source_file_id']==10284791
+          assert r['source_license']=='CC BY-NC-SA 4.0'
+          assert r['sheet_count']>0
+          assert not r['original_sheet_names_or_cell_values_exported']
+          assert not r['plot_level_irrigation_dates_or_amounts_verified']
+          assert not r['real_wofost_irrigation_schedule_ready']
+          print('M1-29 original structure only; no irrigation plot join or model run approved')
+          PY
+      - name: Erase transient original licensed Excel file
+        if: always()
+        run: rm -f /tmp/m1-29-licensed-original-Irrigation.xlsx
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m1-29-original-WUR-irrigation-WORKBOOK-STRUCTURE-ONLY
+          retention-days: 14
+          path: /tmp/m1-29-safe-aggregates/m1_29_irrigation_workbook_structure_only.json
