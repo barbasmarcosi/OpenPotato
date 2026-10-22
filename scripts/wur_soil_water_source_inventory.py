@@ -15,8 +15,8 @@ from pathlib import Path
 DOI="10.7910/DVN/1LC6W7"
 LICENSE="CC BY-NC-SA 4.0"
 ORIGINALS={
-    "groundwater":{"file_id":10284788,"filename":"Groundwaterlevel.xlsx","sha256":None},
-    "waterpotential":{"file_id":10284794,"filename":"Waterpotential.xlsx","sha256":None},
+    "groundwater":{"file_id":10284788,"filename":"Groundwaterlevel.xlsx","sha256":"7c546ba5493fa28bb073073071ff44be562e89d4401467caefe73b82911f65de"},
+    "waterpotential":{"file_id":10284794,"filename":"Waterpotential.xlsx","sha256":"7a6924d01eff020215a1aca9c7de36fa4d97b33a0e99cfcf330127bedcfdec15"},
 }
 CLUES={
   "date_time":r"\bdate\b|\bdatum\b|\btime\b|\btimestamp\b|\bday\b",
