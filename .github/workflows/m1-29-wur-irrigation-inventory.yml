@@ -12,6 +12,8 @@ on:
       - "tests/test_wur_irrigation_event_admission.py"
       - "scripts/wur_rainfall_cross_source_qc.py"
       - "tests/test_wur_rainfall_cross_source_qc.py"
+      - "scripts/wur_irrigation_trial_window_coverage.py"
+      - "tests/test_wur_irrigation_trial_window_coverage.py"
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
@@ -32,6 +34,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_wur_irrigation_schema_probe.py' -v
           python -m unittest discover -s tests -p 'test_wur_irrigation_event_admission.py' -v
           python -m unittest discover -s tests -p 'test_wur_rainfall_cross_source_qc.py' -v
+          python -m unittest discover -s tests -p 'test_wur_irrigation_trial_window_coverage.py' -v
       - name: Verify public original irrigation file, version, license, and original checksum
         run: |
           python - <<'PY'
@@ -163,6 +166,30 @@ jobs:
           assert not r['2020_crop_biomass_consulted'] and not r['WOFOST_crop_predictions_performed']
           assert r['original_daily_dates_or_measurements_exported']==0
           print('M1-32: 526 paired climate/rainfall records, no assumption of sensor or irrigation unit equivalence')
+          PY
+      - name: M1-33 source-verified trial window irrigation UNKNOWN coverage
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m scripts.wur_irrigation_trial_window_coverage --irrigation /tmp/m1-29-licensed-original-Irrigation.xlsx --out /tmp/m1-29-safe-aggregates
+          python - <<'PY'
+          import json,pathlib
+          r=json.loads(pathlib.Path('/tmp/m1-29-safe-aggregates/m1_33_irrigation_trial_window_UNKNOWN_counts.json').read_text())
+          assert r['source_sha_checked'] and r['source_license']=='CC BY-NC-SA 4.0'
+          assert len(r['site_year_aggregate_counts'])==4
+          assert sum(sum(win['recorded_days'] for win in row['windows'].values())
+                     for row in r['site_year_aggregate_counts'])==526
+          assert r['blanks_or_absent_calendar_rows_are_NOT_zero']
+          assert not r['source_unit_W1_W2_independently_confirmed']
+          assert not r['source_blank_semantics_confirmed']
+          assert not r['wofost_irrigation_agromanagement_admissible']
+          assert not r['wofost_crop_yield_predictions_executed']
+          assert r['source_dates_or_water_doses_exported']==0
+          assert r['crop_yields_or_plot_ids_exported']==0
+          for row in r['site_year_aggregate_counts']:
+              assert row['registered_calendar_days_within_window'] <= row['conservative_calendar_days_including_both_anchors']
+              assert row['W1_unknown_total_blanks_plus_unrecorded_days'] >= row['calendar_days_without_register_row_UNKNOWN']
+              assert row['W2_unknown_total_blanks_plus_unrecorded_days'] >= row['calendar_days_without_register_row_UNKNOWN']
+          print('M1-33 source window counts verified. UNKNOWN remains UNKNOWN, not irrigation=0.')
           PY
       - name: Erase transient original licensed Excel file
         if: always()
