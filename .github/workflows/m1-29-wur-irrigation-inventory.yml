@@ -178,6 +178,22 @@ jobs:
           assert len(r['site_year_aggregate_counts'])==4
           assert sum(sum(win['recorded_days'] for win in row['windows'].values())
                      for row in r['site_year_aggregate_counts'])==526
+          observed={(x['site'],x['year']):(
+              x['conservative_calendar_days_including_both_anchors'],
+              x['registered_calendar_days_within_window'],
+              x['calendar_days_without_register_row_UNKNOWN'],
+              x['W1_unknown_total_blanks_plus_unrecorded_days'],
+              x['W2_unknown_total_blanks_plus_unrecorded_days'],
+            ) for x in r['site_year_aggregate_counts']}
+          assert observed=={
+              ('Lelystad',2019):(190,127,63,179,149),
+              ('Vredepeel',2019):(176,131,45,102,99),
+              ('Lelystad',2020):(198,134,64,189,168),
+              ('Vredepeel',2020):(182,134,48,95,80),
+          }
+          assert sum(v[2] for v in observed.values())==220
+          assert sum(v[3] for v in observed.values())==565
+          assert sum(v[4] for v in observed.values())==496
           assert r['blanks_or_absent_calendar_rows_are_NOT_zero']
           assert not r['source_unit_W1_W2_independently_confirmed']
           assert not r['source_blank_semantics_confirmed']
