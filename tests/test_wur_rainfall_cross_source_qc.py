@@ -30,6 +30,27 @@ class CrossWeatherTests(unittest.TestCase):
         self.assertEqual(sum(r["same_site_same_day_records"] for r in result["site_year_aggregates"]),526)
         self.assertNotIn("2019-01-01",str(result))
         self.assertNotIn("10.0",str(result))
+    def test_exact_tenfold_daily_relation_is_tested_not_inferred_from_sums(self):
+        register,weather=mocked_rain_sources()
+        for key,(rain,_) in register.items():
+            year,site,day=key
+            weather[site][day]=10*rain
+        report=mod.compare_indices(register,weather,"AMBIGUOUS_OR_UNSPECIFIED")
+        self.assertTrue(report["all_526_paired_rainfall_days_observe_10x_source_numeric_relation"])
+        self.assertFalse(report["RAIN_field_independently_declared_mm_but_register_declared_cm"])
+        self.assertFalse(report["irrigation_W1_W2_mm_approved"])
+        for group in report["site_year_aggregates"]:
+            self.assertEqual(group["rain_daily_values_NOT_matching_tenfold_relation"],0)
+            self.assertEqual(group["rain_daily_values_matching_tenfold_weather_mm_relation"],
+                             group["same_site_same_day_records"])
+        one=next(iter(register))
+        y,site,d=one
+        weather[site][d]+=0.01
+        altered=mod.compare_indices(register,weather,"AMBIGUOUS_OR_UNSPECIFIED")
+        self.assertFalse(altered["all_526_paired_rainfall_days_observe_10x_source_numeric_relation"])
+        self.assertEqual(sum(g["rain_daily_values_NOT_matching_tenfold_relation"]
+                             for g in altered["site_year_aggregates"]),1)
+
     def test_missing_weather_day_fails_closed(self):
         register,weather=mocked_rain_sources()
         d=date(2019,1,1)
