@@ -12,6 +12,8 @@ on:
       - 'tests/test_wur_weather_semantics_gate.py'
       - 'scripts/wur_weather_holdout_exposure.py'
       - 'tests/test_wur_weather_holdout_exposure.py'
+      - 'scripts/wur_pcse_source_contract.py'
+      - 'tests/test_wur_pcse_source_contract.py'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
@@ -33,6 +35,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_wur_weather_column_audit.py' -v
           python -m unittest discover -s tests -p 'test_wur_weather_semantics_gate.py' -v
           python -m unittest discover -s tests -p 'test_wur_weather_holdout_exposure.py' -v
+          python -m unittest discover -s tests -p 'test_wur_pcse_source_contract.py' -v
       - name: Fetch and hash-lock original public WUR XLSX with license/version checks
         run: |
           python - <<'PY'
@@ -130,6 +133,23 @@ jobs:
           assert y['non_numeric_after_last_sample']==58
           assert cols[0]['coverage']['2019']['missing_na']==0
           print('M1-25: source-verified 34 missing through last sample + 58 after; no WOFOST validation')
+          PY
+      - name: M1-26 original PCSE weather input schema consistency
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.wur_pcse_source_contract --lelystad /tmp/Weatherfile_lelystad.xlsx --vredepeel /tmp/Weatherfile_vredepeel.xlsx --out /tmp/m1-22-source-counts
+          python - <<'PY'
+          import json,pathlib
+          r=json.loads(pathlib.Path('/tmp/m1-22-source-counts/m1_26_pcse_source_contract_counts.json').read_text())
+          assert len(r['sites'])==2
+          assert r['original_source_records_exported']==0
+          assert not r['wofost_crop_model_field_validated']
+          for site in r['sites']:
+              assert site['schema_exact_native_pcse']
+              assert site['mandatory_2019_2020_complete']
+              assert site['unused_source_columns_one_based']==[9,10]
+          print('PCSE weather input contract source verified, no crop model validation claimed')
           PY
       - name: Delete source weather workbooks regardless of success
         if: always()
