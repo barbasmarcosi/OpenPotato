@@ -12,7 +12,7 @@ from pathlib import Path
 from scripts.wur_irrigation_source_inventory import EXPECTED_SHA256,parse_date
 from scripts import wur_potato_field_audit as plotsource
 
-SITE_CODES={"lelystad":"L","vredepeel":"V"}
+SITE_CODES={"lelystad":"L","l":"L","vredepeel":"V","v":"V"}
 SITE_NAMES={"L":"Lelystad","V":"Vredepeel"}
 YEARS=(2019,2020)
 REQUIRED_COLUMNS={"rainfall":3,"W1":4,"W2":5} # zero-based physical positions
