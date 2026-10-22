@@ -89,6 +89,25 @@ class StrictWeatherUnitTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"checksum"):
             mod.inspect_original_weather({"Lelystad":b"invented","Vredepeel":b"invented"})
 
+    def test_date_axis_with_three_years_keeps_2019_and_2020(self):
+        # Weather workbook may begin in 2018: not every valid date is in the
+        # 2019-2020 experimental holdout; this must not cause false rejection.
+        class FictionalSheet:
+            def iter_rows(self, min_row, values_only):
+                assert min_row == 10 and values_only
+                d=date(2018,1,1)
+                for i in range(1096):
+                    yield (d+timedelta(days=i), 20.0, "INVENTED_NOT_WUR")
+        result=mod._date_column(FictionalSheet())
+        self.assertEqual(result["date_column_status"],
+                         "UNIQUE_DATE_LIKE_COLUMN_UNITS_UNCONFIRMED")
+        self.assertEqual(result["parsed_dates_2019"],365)
+        self.assertEqual(result["parsed_dates_2020"],365)
+        self.assertEqual(result["parsed_dates_other_years"],366)
+        self.assertEqual(result["duplicate_date_rows"],0)
+        self.assertEqual(result["missing_calendar_days_within_observed_window"],0)
+        self.assertFalse(result["date_axis_ready_for_model"])
+
 
 if __name__=="__main__":
     unittest.main()
