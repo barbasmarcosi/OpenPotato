@@ -8,6 +8,8 @@ on:
       - 'tests/test_wur_weather_daily_gate.py'
       - 'scripts/wur_weather_column_audit.py'
       - 'tests/test_wur_weather_column_audit.py'
+      - 'scripts/wur_weather_semantics_gate.py'
+      - 'tests/test_wur_weather_semantics_gate.py'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
@@ -27,6 +29,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_wur_weather_daily_gate.py' -v
           python -m unittest discover -s tests -p 'test_wur_weather_column_audit.py' -v
+          python -m unittest discover -s tests -p 'test_wur_weather_semantics_gate.py' -v
       - name: Fetch and hash-lock original public WUR XLSX with license/version checks
         run: |
           python - <<'PY'
@@ -79,6 +82,27 @@ jobs:
           assert r['original_daily_observation_values_exported']==0
           assert r['original_header_strings_exported']==0
           print('Numeric coverage metadata only; meteorological dictionary has NOT been validated')
+          PY
+      - name: M1-24 weather source metadata and missing streak audit
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.wur_weather_semantics_gate --lelystad /tmp/Weatherfile_lelystad.xlsx --vredepeel /tmp/Weatherfile_vredepeel.xlsx --out /tmp/m1-22-source-counts
+          python - <<'PY'
+          import json,pathlib
+          r=json.loads(pathlib.Path('/tmp/m1-22-source-counts/m1_24_weather_semantics_and_missingness.json').read_text())
+          assert r['status']=='SOURCE_METADATA_AND_MISSINGNESS_AUDITED_NOT_WOFOST_READY'
+          assert len(r['sites'])==2 and all(s['original_daily_dates']==1096 for s in r['sites'])
+          assert all(s['daily_dates_by_year']=={'2018':365,'2019':365,'2020':366} for s in r['sites'])
+          assert r['raw_workbooks_exported']==r['daily_weather_values_exported']==r['original_header_strings_exported']==0
+          assert r['field_wofost_run_admissible'] is False
+          for s in r['sites']:
+              assert all(c['approved_pcse_field'] is None for c in s['columns'])
+              for c in s['columns']:
+                  for y in ('2019','2020'):
+                      v=c['counts_by_year'][y]
+                      assert v['finite_numeric']+v['missing_na']+v['untyped_nonfinite']==v['days']
+          print('M1-24 meteorological readiness DENIED until units and management are independently reviewed')
           PY
       - name: Delete source weather workbooks regardless of success
         if: always()
