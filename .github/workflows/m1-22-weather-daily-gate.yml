@@ -148,7 +148,7 @@ jobs:
           for site in r['sites']:
               assert site['schema_exact_native_pcse']
               assert site['mandatory_2019_2020_complete']
-              assert site['unused_source_columns_one_based']==[9,10]
+              assert site['unused_source_columns_one_based']==[8,10]
           print('PCSE weather input contract source verified, no crop model validation claimed')
           PY
       - name: Delete source weather workbooks regardless of success
