@@ -44,6 +44,15 @@ class EvidenceTests(unittest.TestCase):
   self.assertEqual([verified[k]["data_column_one_based"] for k in ("rainfall","W1","W2")],[4,5,6])
   self.assertEqual(units,"AMBIGUOUS_OR_UNSPECIFIED")
   self.assertEqual(clues,[])
+ def test_underscores_are_valid_header_separators_not_free_form_inference(self):
+  meta,data=source_sheet()
+  data.rows[0]=("Location","Year","Date","Rain","Irrigation_W1","Irrigation_W2")
+  meta.rows[15]=("Irrigation_W1",None,"W1 irrigation")
+  meta.rows[16]=("Irrigation_W2",None,"W2 irrigation")
+  mapping,units,_=mod.safe_source_signatures(meta,data)
+  self.assertEqual(mapping["W1"]["data_column_one_based"],5)
+  self.assertEqual(mapping["W2"]["data_column_one_based"],6)
+  self.assertEqual(units,"AMBIGUOUS_OR_UNSPECIFIED")
  def test_explicit_mm_can_be_recognized_but_not_invented(self):
   m,d=source_sheet()
   m.rows[15]=("Irrigation W1 (mm)",None,"W1 irrigation")
