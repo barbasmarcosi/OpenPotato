@@ -60,7 +60,7 @@ def _date_column(sheet):
             if value is not None:
                 nonempty[i] += 1
             d = parse_day(value)
-            if d is not None and d.year in (2019, 2020):
+            if d is not None and 1950 <= d.year <= 2100:
                 counts[i] += 1
                 visits.setdefault(i, []).append(d)
     # Date axis must be unique, nontrivial and cover most non-empty cells.
@@ -93,6 +93,7 @@ def _date_column(sheet):
             "matching_date_column_count": 1,
             "parsed_dates_2019": by_year[2019],
             "parsed_dates_2020": by_year[2020],
+            "parsed_dates_other_years": len(series) - by_year[2019] - by_year[2020],
             "distinct_dates": len(unique),
             "duplicate_date_rows": dup,
             "missing_calendar_days_within_observed_window": calendar_gaps,
