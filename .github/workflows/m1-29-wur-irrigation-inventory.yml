@@ -154,6 +154,10 @@ jobs:
           assert r['weather_rain_source_declared_unit']=='mm'
           assert len(r['site_year_aggregates'])==4
           assert sum(x['same_site_same_day_records'] for x in r['site_year_aggregates'])==526
+          assert r['all_526_paired_rainfall_days_observe_10x_source_numeric_relation']
+          assert sum(x['rain_daily_values_NOT_matching_tenfold_relation'] for x in r['site_year_aggregates'])==0
+          assert all(x['max_absolute_tenfold_residual_in_weather_numeric_scale']==0 for x in r['site_year_aggregates'])
+          assert not r['RAIN_field_independently_declared_mm_but_register_declared_cm']
           assert not r['irrigation_register_water_unit_approved']
           assert not r['irrigation_W1_W2_mm_approved'] and not r['blanks_treated_as_zero']
           assert not r['2020_crop_biomass_consulted'] and not r['WOFOST_crop_predictions_performed']
