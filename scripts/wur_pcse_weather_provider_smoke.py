@@ -47,6 +47,12 @@ def build_private_pcse_xlsx(source_sheet):
                 parsed=day(value)
                 if parsed is None:raise ValueError("Non-dated source row")
                 value=datetime.combine(parsed,time.min)
+            elif field=="SNOWDEPTH":
+                # The original uses negative placeholders for OPTIONAL snow.
+                # Preserve its missingness with the source-declared sentinel.
+                missing=rows[5][1]
+                if value is None or isinstance(value,(int,float)) and value<0:
+                    value=missing
             ws.cell(nr,i,value)
     buffer=io.BytesIO()
     out.save(buffer);out.close()
