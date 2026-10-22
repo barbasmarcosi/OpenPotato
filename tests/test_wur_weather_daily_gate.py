@@ -102,8 +102,8 @@ class StrictWeatherUnitTests(unittest.TestCase):
         self.assertEqual(result["date_column_status"],
                          "UNIQUE_DATE_LIKE_COLUMN_UNITS_UNCONFIRMED")
         self.assertEqual(result["parsed_dates_2019"],365)
-        self.assertEqual(result["parsed_dates_2020"],365)
-        self.assertEqual(result["parsed_dates_other_years"],366)
+        self.assertEqual(result["parsed_dates_2020"],366)
+        self.assertEqual(result["parsed_dates_other_years"],365)
         self.assertEqual(result["duplicate_date_rows"],0)
         self.assertEqual(result["missing_calendar_days_within_observed_window"],0)
         self.assertFalse(result["date_axis_ready_for_model"])
