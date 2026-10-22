@@ -3,6 +3,7 @@ import hashlib
 import io
 import unittest
 from datetime import date
+from unittest.mock import patch
 from scripts import wur_soil_water_source_inventory as mod
 try:
     from openpyxl import Workbook
@@ -24,18 +25,20 @@ def make_fake():
 class SoilSourceInventoryTests(unittest.TestCase):
     def test_bootstrap_only_reports_safe_sheet_metadata(self):
         data=make_fake()
-        report=mod.inspect_workbook(data,"groundwater",allow_bootstrap=True)
+        with patch.dict(mod.ORIGINALS["groundwater"],{"sha256":hashlib.sha256(data).hexdigest()}):
+            report=mod.inspect_workbook(data,"groundwater")
         self.assertEqual(report["number_of_sheets"],2)
         self.assertFalse(report["field_soil_parameters_derived"])
-        self.assertFalse(report["source_digest_independently_pinned"])
+        self.assertTrue(report["source_digest_independently_pinned"])
         self.assertEqual(report["sheet_structures"][1]["typed_or_ISO_date_cells_by_year"],{"2019":1,"2020":1})
         result=str(report)
         for secret in ("PRIVATE_PLOT_ID","SECRET-SOURCE-HEADER","-31.5","2019-05-04"):
             self.assertNotIn(secret,result)
     def test_no_bootstrap_requires_independent_source_checksum(self):
         data=make_fake()
-        with self.assertRaisesRegex(ValueError,"independently pinned"):
-            mod.inspect_workbook(data,"groundwater")
+        with patch.dict(mod.ORIGINALS["groundwater"],{"sha256":None}):
+            with self.assertRaisesRegex(ValueError,"independently pinned"):
+                mod.inspect_workbook(data,"groundwater")
     def test_mismatched_hash_is_rejected_if_pinned(self):
         old=mod.ORIGINALS["groundwater"]["sha256"]
         try:
@@ -48,8 +51,9 @@ class SoilSourceInventoryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"Both WUR original"):
             mod.assess_sources({"groundwater":make_fake()},allow_bootstrap=True)
     def test_invalid_workbook_bytes_never_accepted(self):
-        with self.assertRaisesRegex(ValueError,"not valid XLSX"):
-            mod.inspect_workbook(b"not excel","waterpotential",allow_bootstrap=True)
+        with patch.dict(mod.ORIGINALS["waterpotential"],{"sha256":hashlib.sha256(b"not excel").hexdigest()}):
+            with self.assertRaisesRegex(ValueError,"not valid XLSX"):
+                mod.inspect_workbook(b"not excel","waterpotential")
     def test_language_patterns_are_clues_not_units(self):
         tags=mod.metadata_tags("water potential pF from 30 cm")
         self.assertIn("potential",tags)
