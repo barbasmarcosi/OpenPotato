@@ -151,7 +151,8 @@ def benchmark(rows, strict=True, counts=EXPECTED_PLOTS_PER_SITE):
         "evidence_level":"REAL_OBSERVED_FIELD_OUTCOMES_2020; EMPIRICAL_2019_BASELINE_NOT_WOFOST",
         "source_doi":source.DOI,
         "source_version":source.VERSION,
-        "source_csv_sha256":source.SOURCE_SHA256 if strict else "SYNTHETIC_TEST_DATA_ONLY",
+        "source_csv_sha256":"UNVERIFIED_IN_MEMORY_INPUT_NOT_PRIMARY_SOURCE",
+        "original_source_bytes_verified":False,
         "source_license":source.LICENSE,
         "source_license_uri":"https://creativecommons.org/licenses/by-nc-sa/4.0/",
         "derivative_reuse":"Attribution to authors; CC BY-NC-SA 4.0; noncommercial/sharealike",
@@ -199,6 +200,9 @@ def evaluate_original(source_csv: Path, out: Path):
     source.inspect_original(blob)
     rows=list(csv.DictReader(io.StringIO(blob.decode("utf-8-sig"))))
     report=benchmark(rows)
+    # Only this verified byte-checked entrypoint may assert empirical provenance.
+    report["source_csv_sha256"]=source.SOURCE_SHA256
+    report["original_source_bytes_verified"]=True
     out=Path(out);out.mkdir(parents=True,exist_ok=True)
     (out/"wur_2020_true_holdout_empirical_baselines.json").write_text(
         json.dumps(report,ensure_ascii=False,sort_keys=True,indent=2)+"\n",
