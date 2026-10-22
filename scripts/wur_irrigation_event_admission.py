@@ -18,8 +18,8 @@ YEARS=(2019,2020)
 REQUIRED_COLUMNS={"rainfall":3,"W1":4,"W2":5} # zero-based physical positions
 FIELD_SIGNATURE={
  "rainfall":r"\brain|neerslag|precipitation",
- "W1":r"\birrigat|\bwatergift|\bwaterapp",
- "W2":r"\birrigat|\bwatergift|\bwaterapp",
+ "W1":r"irrigat|watergift|waterapp",
+ "W2":r"irrigat|watergift|waterapp",
 }
 W_CODES={"W1":r"(?<!\w)w\s*1(?!\w)","W2":r"(?<!\w)w\s*2(?!\w)"}
 UNIT_PATTERNS={
