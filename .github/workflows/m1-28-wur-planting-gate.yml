@@ -36,6 +36,14 @@ jobs:
           if v.get('license',{}).get('name')!='CC BY-NC-SA 4.0':
               raise ValueError('License changed')
           files={f['dataFile']['id']:f for f in v['files']}
+          # Inventory public filenames/ids only; never copy data or unknown license content.
+          keywords=('irrig','soil','water','plot','npk','penet','groundwater','meta','weather','fertil')
+          candidates=sorted(
+              (item['dataFile']['filename'],item['dataFile']['id'],
+               bool(item.get('restricted',item['dataFile'].get('restricted',True))))
+              for item in v['files']
+              if any(k in item['dataFile']['filename'].lower() for k in keywords))
+          print('WUR public asset candidates (name, dataverse ID, restricted):',candidates)
           entry=files.get(10850227)
           if (not entry or entry.get('restricted',entry['dataFile'].get('restricted',True)) or
               entry['dataFile'].get('filename')!='Plotspecific_processed.csv' or
