@@ -144,13 +144,16 @@ def benchmark(rows, strict=True, counts=EXPECTED_PLOTS_PER_SITE):
     site_only_errors=[p["site_only_mean_prediction"]-p["heldout_mean"] for p in ordered]
     if any(not math.isfinite(v) for v in site_cultivar_errors+site_only_errors):
         raise ValueError("Nonfinite observed baseline error")
-    assert sum(x["train_n"] for x in ordered) == sum(counts.values()) if strict else True
-    assert sum(x["test_n"] for x in ordered) == sum(counts.values()) if strict else True
+    if strict:
+        if (sum(x["train_n"] for x in ordered) != sum(counts.values()) or
+                sum(x["test_n"] for x in ordered) != sum(counts.values())):
+            raise ValueError("Out-of-year biological plot coverage unexpectedly incomplete")
     return {
         "status":STATUS,
         "evidence_level":"REAL_OBSERVED_FIELD_OUTCOMES_2020; EMPIRICAL_2019_BASELINE_NOT_WOFOST",
         "source_doi":source.DOI,
         "source_version":source.VERSION,
+        "baseline_algorithm_source_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "source_csv_sha256":"UNVERIFIED_IN_MEMORY_INPUT_NOT_PRIMARY_SOURCE",
         "original_source_bytes_verified":False,
         "source_license":source.LICENSE,
@@ -217,9 +220,9 @@ def evaluate_original(source_csv: Path, out: Path):
         "**CC BY-NC-SA 4.0: atribución, uso no comercial y compartir igual.**",
         "",
         f"Entrenamiento observacional: {report['training_year']} con "
-        f"{report['training_unique_physical_plots']} parcelas por sitio×año.",
+        f"{report['training_unique_physical_plots']} parcelas en total (45 Lelystad + 42 Vredepeel).",
         f"Evaluación temporal reservada: {report['completely_reserved_evaluation_year']} con "
-        f"{report['heldout_unique_physical_plots']} parcelas por sitio×año.",
+        f"{report['heldout_unique_physical_plots']} parcelas en total (45 Lelystad + 42 Vredepeel).",
         "Unidades: kg/ha de tubérculo SECO observado; el último muestreo no prueba cosecha comercial.",
         "",
         "| Baseline empírico sobre 6 medias sitio×cultivar | MAE kg seco/ha | RMSE kg seco/ha | Sesgo predicho−observado kg seco/ha |",
