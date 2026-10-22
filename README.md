@@ -52,6 +52,7 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 | [M1-22 — cronología y unidades diarias WUR](docs/34-m1-22-auditoria-y-contrato-clima-diario.md) | Las dos estaciones tienen 1.096 fechas consecutivas 2018–2020; controles PCSE de unidades, ausentes y continuidad con bloqueo científico previo a modelado |
 | [M1-23 — cobertura física meteorológica WUR](docs/35-m1-23-cobertura-columnas-meteorologicas.md) | Auditoría original 2019–2020: 8/9 columnas completas Lelystad, 9/9 Vredepeel; 92 ausentes en columna 10 Lelystad, sin atribución física ni imputación |
 | [M1-24 — unidades y temporalidad de faltantes en WUR](docs/36-m1-24-unidades-metadata-ventanas-de-faltantes.md) | Fuente primaria verificada: 92 faltantes seguidos en la columna 10 de Lelystad SOLO octubre–diciembre 2020. Diccionario de variables/altura viento/método ET todavía no aprobado; no correr WOFOST de campo. |
+| [M1-25 — intersección clima faltante y último muestreo](docs/37-m1-25-exposicion-faltantes-holdout.md) | 34 días sin dato de columna 10 Lelystad hasta última medición de biomasa 2020-11-03, y 58 posteriores; comprobado contra los XLSX originales sin atribuir variable ni ejecutar WOFOST |
 | [Acceso CIP Dataverse](research/cip-dataverse-access.csv) | Acceso público o restringido verificado por archivo y DOI |
 | [Fuentes multientorno candidatas](research/multienvironment-candidates.csv) | Catálogo con estado de acceso, granularidad y licencias pendientes |
 | [Zinc — contraste genético/agronómico](docs/15-biofortificacion-zinc-comparacion.md) | Estudio agrícola primario 2026 y nueva hipótesis alternativa |
@@ -62,6 +63,8 @@ OpenPotato investiga el problema con un enfoque medible: no solo toneladas por h
 **M1-22/M1-23:** auditoría de dos libros meteorológicos originales de WUR con 1.096 fechas diarias consecutivas por estación (2018–2020) y conteos numéricos sin redistribuir archivos licenciados: 92 celdas ausentes en columna 10 de Lelystad (2019–20), ninguna en las nueve columnas físicas de Vredepeel. El mapeo físico de esa columna y la preparación de entradas meteorológicas completas para WOFOST **siguen pendientes**. Se dispone de contratos de conversiones estrictas y bloqueos explícitos; **no existe aún validación WOFOST sobre este campo**.
 
 **M1-24:** los 92 valores ausentes en la columna meteorológica física 10 de Lelystad están concentrados exclusivamente en el cuarto trimestre de 2020 (una sola racha consecutiva), sin ausentes en 2019; Vredepeel no muestra faltantes en 2019–2020. Esta columna y sus unidades todavía no están identificadas inequívocamente; la simulación WOFOST vinculada al campo permanece bloqueada. [Evidencia reproducible M1-24](https://github.com/barbasmarcosi/OpenPotato/actions/runs/39712232552).
+
+**M1-25:** los libros originales confirman que, de los 92 valores ausentes de la columna 10 de Lelystad en 2020, **34 caen antes o el mismo día del último muestreo observado (3 de noviembre)** y los 58 restantes después. La posición de columna sigue sin variable/unidad aprobada; este resultado diagnostica exposición temporal y NO equivale a una simulación WOFOST calibrada. [Auditoría M1-25 verde](https://github.com/barbasmarcosi/OpenPotato/actions/runs/39713293245).
 
 ## Estado de resultados
 
