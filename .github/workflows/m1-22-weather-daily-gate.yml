@@ -14,6 +14,8 @@ on:
       - 'tests/test_wur_weather_holdout_exposure.py'
       - 'scripts/wur_pcse_source_contract.py'
       - 'tests/test_wur_pcse_source_contract.py'
+      - 'scripts/wur_pcse_weather_provider_smoke.py'
+      - 'tests/test_wur_pcse_weather_provider_smoke.py'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
@@ -36,6 +38,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_wur_weather_semantics_gate.py' -v
           python -m unittest discover -s tests -p 'test_wur_weather_holdout_exposure.py' -v
           python -m unittest discover -s tests -p 'test_wur_pcse_source_contract.py' -v
+          python -m unittest discover -s tests -p 'test_wur_pcse_weather_provider_smoke.py' -v
       - name: Fetch and hash-lock original public WUR XLSX with license/version checks
         run: |
           python - <<'PY'
@@ -150,6 +153,25 @@ jobs:
               assert site['mandatory_2019_2020_complete']
               assert site['unused_source_columns_one_based']==[8,10]
           print('PCSE weather input contract source verified, no crop model validation claimed')
+          PY
+      - name: Install exact PCSE weather reader for source smoke validation
+        run: python -m pip install pcse==6.0.13
+      - name: M1-27 verify every original day with official PCSE reader
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.wur_pcse_weather_provider_smoke --lelystad /tmp/Weatherfile_lelystad.xlsx --vredepeel /tmp/Weatherfile_vredepeel.xlsx --out /tmp/m1-22-source-counts
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('/tmp/m1-22-source-counts/m1_27_pcse_provider_verified_days_only.json')
+          r=json.loads(p.read_text())
+          assert r['pcse_version']=='6.0.13'
+          assert not r['model_prediction_heldout_performed']
+          assert not r['agronomic_model_calibration_approved']
+          assert len(r['sites'])==2
+          assert all(s['pcse_daily_calendar_days_retrievable']==1096 for s in r['sites'])
+          assert all(s['pcse_weather_daily_records_exported']==0 for s in r['sites'])
+          print('PCSE official provider: full original chronology; NOT agronomic model validation')
           PY
       - name: Delete source weather workbooks regardless of success
         if: always()
