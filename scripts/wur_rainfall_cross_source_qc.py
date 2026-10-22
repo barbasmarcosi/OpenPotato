@@ -105,7 +105,7 @@ def index_weather(ws,site):
 
 def compare_indices(irrigation,weather_by_site,irrigation_unit_status):
     """No source-specific daily values or dates leave these aggregates."""
-    accum=defaultdict(lambda:{"n":0,"exact":0,"both_zero":0,
+    accum=defaultdict(lambda:{"n":0,"exact":0,"tenfold_equal":0,"tenfold_mismatch":0,"tenfold_max_residual":0.,"both_zero":0,
        "both_positive":0,"register_positive_weather_zero":0,
        "weather_positive_register_zero":0,"numerical_abs_difference":0.,
        "rainfall_register_sum":0.,"rainfall_weather_sum":0.,
@@ -117,6 +117,11 @@ def compare_indices(irrigation,weather_by_site,irrigation_unit_status):
         group=accum[year,site]
         group["n"]+=1
         if abs(rain-weather_rain) <= 1e-9:group["exact"]+=1
+        # An empirical factor-of-ten check, not a unit/sensor certification.
+        residual=abs(10*rain-weather_rain)
+        group["tenfold_max_residual"]=max(group["tenfold_max_residual"],residual)
+        if residual<=1e-7:group["tenfold_equal"]+=1
+        else:group["tenfold_mismatch"]+=1
         if rain==0 and weather_rain==0:group["both_zero"]+=1
         elif rain>0 and weather_rain>0:group["both_positive"]+=1
         elif rain>0:group["register_positive_weather_zero"]+=1
@@ -144,6 +149,9 @@ def compare_indices(irrigation,weather_by_site,irrigation_unit_status):
             "same_site_same_day_records":v["n"],
             "rain_positive_in_both_sources_days":v["both_positive"],
             "rain_zero_in_both_sources_days":v["both_zero"],
+            "rain_daily_values_matching_tenfold_weather_mm_relation":v["tenfold_equal"],
+            "rain_daily_values_NOT_matching_tenfold_relation":v["tenfold_mismatch"],
+            "max_absolute_tenfold_residual_in_weather_numeric_scale":round(v["tenfold_max_residual"],8),
             "irrigation_register_rain_positive_weather_zero_days":v["register_positive_weather_zero"],
             "weather_rain_positive_irrigation_register_zero_days":v["weather_positive_register_zero"],
             "equal_rainfall_numerical_cells_if_both_interpreted_as_mm":v["exact"],
@@ -168,6 +176,10 @@ def compare_indices(irrigation,weather_by_site,irrigation_unit_status):
       "weather_rain_source_declared_unit":"mm",
       "irrigation_register_water_unit_approved":False,
       "irrigation_register_header_unit_status":irrigation_unit_status,
+      "all_526_paired_rainfall_days_observe_10x_source_numeric_relation":all(
+          x["rain_daily_values_matching_tenfold_weather_mm_relation"]==x["same_site_same_day_records"]
+          for x in result),
+      "RAIN_field_independently_declared_mm_but_register_declared_cm":False,
       "rainfall_inter_source_agreement_is_NOT_an_unit_conversion":True,
       "source_humidity_or_rain_sensor_equivalence_approved":False,
       "blanks_treated_as_zero":False,
@@ -179,6 +191,7 @@ def compare_indices(irrigation,weather_by_site,irrigation_unit_status):
       "site_year_aggregates":result,
       "limitations":[
         "The two original rainfall files may represent different sensors or measurement protocols.",
+        "Even exact 10x numerical equality does not independently validate W1/W2 source units.",
         "MAE and ratio are numerical diagnostics; neither establishes shared physical units.",
         "Nothing here proves the scale of positive W1/W2 applications in millimeters.",
         "Unknown blanks in W1/W2 have not been turned into zero or no-irrigation events.",
