@@ -8,6 +8,8 @@ on:
       - "tests/test_wur_irrigation_source_inventory.py"
       - "scripts/wur_irrigation_schema_probe.py"
       - "tests/test_wur_irrigation_schema_probe.py"
+      - "scripts/wur_irrigation_event_admission.py"
+      - "tests/test_wur_irrigation_event_admission.py"
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
@@ -26,6 +28,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_wur_irrigation_source_inventory.py' -v
           python -m unittest discover -s tests -p 'test_wur_irrigation_schema_probe.py' -v
+          python -m unittest discover -s tests -p 'test_wur_irrigation_event_admission.py' -v
       - name: Verify public original irrigation file, version, license, and original checksum
         run: |
           python - <<'PY'
@@ -56,6 +59,19 @@ jobs:
           pathlib.Path('/tmp/m1-29-licensed-original-Irrigation.xlsx').write_bytes(content)
           print('Original irrigation file, version and CC BY-NC-SA 4.0 license verified')
           print('New original irrigation SHA256 for independent follow-up pin:',hashlib.sha256(content).hexdigest())
+          plot_file=next((x for x in meta['files'] if x['dataFile']['id']==10850227),None)
+          if (not plot_file or plot_file.get('restricted',plot_file['dataFile'].get('restricted',True))
+              or plot_file['dataFile'].get('filename')!='Plotspecific_processed.csv'
+              or plot_file['dataFile'].get('md5')!='bdf0f745e2c496868e3285a43df0ff04'):
+              raise ValueError('Original study plot source metadata changed')
+          req=urllib.request.Request(base+'/access/datafile/10850227',
+                                    headers={'User-Agent':'OpenPotato-M1-31-TreatmentLink/1.0'})
+          with urllib.request.urlopen(req,timeout=60) as f: plot_bytes=f.read()
+          if hashlib.sha256(plot_bytes).hexdigest()!='8d129262dca38ac98a10f92ccfb1bc46454377020575959fd984c4c5bcab5768':
+              raise ValueError('Original plot source SHA256 changed')
+          pathlib.Path('/tmp/m1-31-licensed-private-plots.csv').write_bytes(plot_bytes)
+          print('Verified original plot file for read-only irrigation treatment join')
+
           PY
       - name: Count only physical workbook structure and tentative header tokens
         env: {PYTHONPATH: ".:src"}
@@ -88,9 +104,26 @@ jobs:
           assert not r['water_units_validated'] and not r['site_plot_treatment_join_verified']
           print('M1-30 typed schema evidence captured. No source irrigation events approved or exported.')
           PY
+      - name: M1-31 verify W1/W2 labels and real physical plot treatment assignment
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m scripts.wur_irrigation_event_admission --irrigation /tmp/m1-29-licensed-original-Irrigation.xlsx --plots /tmp/m1-31-licensed-private-plots.csv --out /tmp/m1-29-safe-aggregates
+          python - <<'PY'
+          import json,pathlib
+          report=json.loads(pathlib.Path('/tmp/m1-29-safe-aggregates/m1_31_source_verified_treatment_event_counts_only.json').read_text())
+          assert report['source_licence']=='CC BY-NC-SA 4.0'
+          assert report['all_site_year_treatment_labels_reconciled']
+          assert report['raw_source_rows_or_irrigation_doses_exported']==0
+          assert report['plot_ids_exported']==report['raw_individual_dates_exported']==0
+          assert len(report['site_year_aggregated_counts'])==4
+          assert not report['complete_zero_imputation_permitted']
+          assert not report['wofost_agromanagement_ready']
+          assert not report['2020_field_biomass_used_for_calibration']
+          print('Source field identity and plot irrigation labels checked; no agronomic WOFOST model run')
+          PY
       - name: Erase transient original licensed Excel file
         if: always()
-        run: rm -f /tmp/m1-29-licensed-original-Irrigation.xlsx
+        run: rm -f /tmp/m1-29-licensed-original-Irrigation.xlsx /tmp/m1-31-licensed-private-plots.csv
       - uses: actions/upload-artifact@v4
         with:
           name: m1-29-original-WUR-irrigation-WORKBOOK-STRUCTURE-ONLY
