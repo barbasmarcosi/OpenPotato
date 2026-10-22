@@ -2,6 +2,12 @@
 import io
 import json
 import unittest
+import importlib.util
+
+# The general M1 job deliberately has no third-party dependencies.
+# Full XLSX tests run in the dedicated M1-21 workflow with openpyxl pinned.
+if importlib.util.find_spec('openpyxl') is None:
+    raise unittest.SkipTest('XLSX tests run in M1-21 dedicated workflow with openpyxl')
 from unittest.mock import patch
 from openpyxl import Workbook
 from scripts import wur_weather_readiness as mod
