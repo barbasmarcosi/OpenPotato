@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "dataset_doi": "10.7910/DVN/1LC6W7",
+  "irrigation_source_sha256": "3def99dfb0643abe4d524431702a224bf62abd9489b306fbb89d54fdb3c9f109",
+  "claims": {
+    "W1_physical_unit": {
+      "status": "UNVERIFIED",
+      "value": null,
+      "primary_source_url": null,
+      "primary_source_sha256": null,
+      "independent_review_reference": null
+    },
+    "W2_physical_unit": {
+      "status": "UNVERIFIED",
+      "value": null,
+      "primary_source_url": null,
+      "primary_source_sha256": null,
+      "independent_review_reference": null
+    },
+    "W1_blank_meaning": {
+      "status": "UNVERIFIED",
+      "value": null,
+      "primary_source_url": null,
+      "primary_source_sha256": null,
+      "independent_review_reference": null
+    },
+    "W2_blank_meaning": {
+      "status": "UNVERIFIED",
+      "value": null,
+      "primary_source_url": null,
+      "primary_source_sha256": null,
+      "independent_review_reference": null
+    },
+    "absent_calendar_row_meaning": {
+      "status": "UNVERIFIED",
+      "value": null,
+      "primary_source_url": null,
+      "primary_source_sha256": null,
+      "independent_review_reference": null
+    },
+    "field_area_or_water_depth_definition": {
+      "status": "UNVERIFIED",
+      "value": null,
+      "primary_source_url": null,
+      "primary_source_sha256": null,
+      "independent_review_reference": null
+    },
+    "application_efficiency_definition": {
+      "status": "UNVERIFIED",
+      "value": null,
+      "primary_source_url": null,
+      "primary_source_sha256": null,
+      "independent_review_reference": null
+    }
+  }
+}
