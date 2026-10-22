@@ -125,7 +125,7 @@ def compare_indices(irrigation,weather_by_site,irrigation_unit_status):
         group["rainfall_register_sum"]+=rain
         group["rainfall_weather_sum"]+=weather_rain
         for name in ("W1","W2"):
-            group[name][status[name]]+=1
+            group[name.lower()][status[name]]+=1
     if set(accum)!=set(EXPECTED_DATE_COUNTS):raise ValueError("Missing site-year group")
     result=[]
     for year,site in sorted(accum):
@@ -137,7 +137,7 @@ def compare_indices(irrigation,weather_by_site,irrigation_unit_status):
               v["weather_positive_register_zero"])
         if rain_classified!=v["n"]:raise ValueError("Rain class counts inconsistent")
         for name in ("W1","W2"):
-            if sum(v[name].values())!=v["n"]:
+            if sum(v[name.lower()].values())!=v["n"]:
                 raise ValueError("Irrigation treatment presence counts inconsistent")
         result.append({
             "year":year,"site":SITE_NAMES[site],
@@ -152,7 +152,7 @@ def compare_indices(irrigation,weather_by_site,irrigation_unit_status):
                round(v["rainfall_register_sum"]/v["rainfall_weather_sum"],3)
                if v["rainfall_weather_sum"]>0 else None),
             "treatment_source_cell_status_counts":{
-               name:dict(sorted(v[name].items())) for name in ("W1","W2")
+               name:dict(sorted(v[name.lower()].items())) for name in ("W1","W2")
             },
         })
     return {
