@@ -32,7 +32,7 @@ class WeatherContractTests(unittest.TestCase):
         self.assertFalse(r["wofost_crop_model_field_validated"])
         self.assertNotIn("NOT-PCSE-10",str(r))
     def test_reject_modified_header(self):
-        with self.assertRaisesRegex(ValueError,"names"):
+        with self.assertRaisesRegex(ValueError,"Missing or duplicate"):
             m.audit_sheet(FakeSheet(bad_header=True))
     def test_reject_sentinel_in_required_field(self):
         with self.assertRaisesRegex(ValueError,"Mandatory"):
