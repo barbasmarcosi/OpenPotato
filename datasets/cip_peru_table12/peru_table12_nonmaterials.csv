@@ -1,0 +1,8 @@
+source_doi,source_file_id,source_tsv_line,row_type,accession_raw,breeder_code_raw,iron_n_label_raw,zinc_n_label_raw
+10.21223/N11QJS,6980,36,source_blank_not_genotype,,,,
+10.21223/N11QJS,6980,37,global_summary_not_genotype,,,Prom,Prom
+10.21223/N11QJS,6980,38,global_summary_not_genotype,,,Max,Max
+10.21223/N11QJS,6980,39,global_summary_not_genotype,,,Min,Min
+10.21223/N11QJS,6980,40,source_blank_not_genotype,,,,
+10.21223/N11QJS,6980,41,source_blank_not_genotype,,,,
+10.21223/N11QJS,6980,42,source_blank_not_genotype,,,,

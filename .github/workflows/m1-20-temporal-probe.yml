@@ -1,0 +1,44 @@
+name: M1-20 Dutch potato field observation temporal alignment probe
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths: [".github/workflows/m1-20-temporal-probe.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect non-identifying observation time and treatment metadata only
+        run: |
+          python - <<'PY'
+          import collections,csv,hashlib,io,json,urllib.request,re
+          id=10850227
+          req=urllib.request.Request(f"https://dataverse.harvard.edu/api/access/datafile/{id}",
+              headers={"User-Agent":"OpenPotato-M1-20-Probe/0.1"})
+          with urllib.request.urlopen(req,timeout=50) as f:raw=f.read()
+          assert hashlib.sha256(raw).hexdigest()=="8d129262dca38ac98a10f92ccfb1bc46454377020575959fd984c4c5bcab5768"
+          rows=list(csv.DictReader(io.StringIO(raw.decode("utf-8-sig"))))
+          def present(r): return r["tubersDW"].strip().upper() not in ("","NA","NULL","NAN")
+          for year in ("2019","2020"):
+            for loc in ("L","V"):
+              src=[r for r in rows if r["Year"]==year and r["Location"]==loc]
+              measured=[r for r in src if present(r)]
+              def category(field,max_items=12):
+                counts=collections.Counter(r[field] for r in src)
+                return {"distinct":len(counts),"counts":sorted(counts.items())[:max_items]}
+              print("SITE_YEAR",json.dumps({
+                "year":year,"site":loc,"records":len(src),"measured_dry":len(measured),
+                "dates_all":category("Date",30),"dates_with_dry":sorted(collections.Counter(
+                      r["Date"] for r in measured).items())[:30],
+                "cultivars":category("Cultivar"),"irrigation":category("Irrigation"),
+                "nitrogen":category("Nitrogen"),"plot_count":len({r["Plotnumber"] for r in src}),
+                "dry_distinct_plots":len({r["Plotnumber"] for r in measured}),
+                "plot_date_duplicate_count":len(measured)-len({
+                  (r["Plotnumber"],r["Date"]) for r in measured}),
+              },ensure_ascii=False),flush=True)
+          print("SOURCE_LICENSE", "CC BY-NC-SA 4.0: aggregates-only, source original not archived",flush=True)
+          PY

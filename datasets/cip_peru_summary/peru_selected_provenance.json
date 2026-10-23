@@ -1,0 +1,27 @@
+{
+  "accessions": 14,
+  "api_download_url": "https://data.cipotato.org/api/access/datafile/6979",
+  "datafile_stored_md5": "170766ab8217f2b6d38f62c646616268",
+  "dataverse_tsv_export_md5": "03b886a403f6f313179e19852f4f5724",
+  "dataverse_tsv_export_sha256": "39843e2d1cea114ee18f32e9cd40219c14a8ff32a70ea737bb6438ee609e9dc8",
+  "dataverse_version": "1.0",
+  "derived_csv_sha256": "2d6d070e5cb191c65e0438548c5864eb5c4480cdc96cfc27fc1796939826dc61",
+  "file_id": 6979,
+  "non_accession_summary_rows_excluded": 3,
+  "nutrient_rows": 28,
+  "prohibitions": [
+    "The final three source rows are global Mean/Max/Min footers, not accessions.",
+    "Reported n may represent pooled observations; biological plot independence not established.",
+    "Mean/sd/min/max are PUBLISHED aggregate statistics, not raw replicates.",
+    "No p-values, inferential G×E effects or cultivar stability can be recomputed from this dataset.",
+    "Other table columns (TTYNA, glycoalkaloids) omitted pending variable dictionary verification.",
+    "Do not combine with other populations as matched experimental cohorts.",
+    "API TSV export hash differs from stored Dataverse MD5; both recorded explicitly."
+  ],
+  "source_doi": "10.21223/N11QJS",
+  "source_table": "Tabla 16; 12 selected CIP clones + 2 commercial controls; 3 footer summary rows excluded",
+  "trait_units": {
+    "iron": "mg/kg dry",
+    "zinc": "mg/kg dry"
+  }
+}

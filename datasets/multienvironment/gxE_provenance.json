@@ -1,0 +1,41 @@
+{
+  "derived_files": {
+    "rank_crossovers.csv": "39944e0f860691b330f39c0822805cc65c432d0cad77a396e379cefc5e991024",
+    "yield_stability.csv": "555fd583f1fdd37a438213f82132429c44255b5a67f4ae16d4dde4be4a168f75"
+  },
+  "environment_share_of_total": "0.47202413503339116473364159331324",
+  "environment_sum_squares": "536.426768750000",
+  "environments": 6,
+  "genotype_share_of_total": "0.27595367662029824496324507585011",
+  "genotype_sum_squares": "313.60459791666666666666666666670",
+  "genotypes": 8,
+  "interaction_share_of_total": "0.25202218834631059030311333083668",
+  "interaction_sum_squares": "286.40791458333333333333333333333",
+  "limitations": [
+    "Historical multienvironment YIELD ONLY trial, not nutritional biofortification.",
+    "One published mean per G×E cell from originally 4-rep design; plot-level values unavailable here.",
+    "Sum-of-squares breakdown describes point estimates, NOT ANOVA F-tests or heritability.",
+    "Interaction RMS and crossover counts are descriptive, not genetic stability certification.",
+    "kg/plot lacks fixed published plot-area here; never convert to tonnes/hectare.",
+    "Data redistribution license must be checked before copying source CSV into repository."
+  ],
+  "locations": [
+    "NB",
+    "NS",
+    "PEI"
+  ],
+  "no_residual_variance_estimate": true,
+  "one_mean_per_genotype_environment": true,
+  "original_study_doi": "10.2135/cropsci1971.0011183X001100020006x",
+  "pairs_of_genotypes": 28,
+  "pairwise_rank_crossovers": 19,
+  "source": "https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/1dcc2bf5f955cc1224a3e1307256e1fe86b68dae/csv/agridat/tai.potato.csv",
+  "source_project": "Rdatasets / agridat::tai.potato",
+  "source_sha256": "6a758579b091050f02da6a352742201a73d5e3bd7ee2c7624f2a7e9e141a9055",
+  "total_sum_squares": "1136.439281250000",
+  "trait": "tuber yield, kg/plot (NO Fe/Zn values)",
+  "years": [
+    "1965",
+    "1966"
+  ]
+}

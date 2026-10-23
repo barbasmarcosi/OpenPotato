@@ -1,0 +1,51 @@
+name: M1 CIP cross-study accession reconciliation
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/cross_study_clones.py"
+      - "tests/test_cross_study_clones.py"
+      - ".github/workflows/cip-cross-study.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  match-identifiers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Offline tests and source provenance verification
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Compare two published sources only at exact shared clone IDs
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.cross_study_clones --out /tmp/cip-cross
+          cat /tmp/cip-cross/matched_cip_report.md
+      - name: Archive reproducible derived evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: cip-shared-clones-cross-source-audit
+          retention-days: 30
+          path: /tmp/cip-cross/
+      - name: Pin only evidence-derived outputs in research branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+        run: |
+          mkdir -p datasets/cross_study
+          cp /tmp/cip-cross/matched_cip_* datasets/cross_study/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/cross_study/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1): pin cross-publication matches for fifteen CIP accession IDs"
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi

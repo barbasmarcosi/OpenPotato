@@ -1,0 +1,57 @@
+{
+  "2019_site_by_cultivar_empirical_persistence": {
+    "bias_predicted_minus_observed_kg_dry_ha": -478.151437,
+    "mae_kg_dry_ha": 1516.043175,
+    "rmse_kg_dry_ha": 1702.307317
+  },
+  "2019_site_only_empirical_persistence": {
+    "bias_predicted_minus_observed_kg_dry_ha": -450.057353,
+    "mae_kg_dry_ha": 1333.399556,
+    "rmse_kg_dry_ha": 1776.115667
+  },
+  "baseline_algorithm_source_sha256": "adf777bceb9ea50c5f4191b78b0b1b070113935ea54d74d198318feba76eff2d",
+  "completely_reserved_evaluation_year": "2020",
+  "derivative_reuse": "Attribution to authors; CC BY-NC-SA 4.0; noncommercial/sharealike",
+  "different_independent_evaluation_years": 1,
+  "distinct_heldout_sites": 2,
+  "evidence_level": "REAL_OBSERVED_FIELD_OUTCOMES_2020; EMPIRICAL_2019_BASELINE_NOT_WOFOST",
+  "heldout_group_means_not_independent_site_years": 6,
+  "heldout_unique_physical_plots": 87,
+  "holdout_model_was_not_tuned_on_2020": true,
+  "last_measured_date_is_NOT_verified_formal_harvest": true,
+  "last_sample_day_by_site_year": {
+    "Lelystad 2019": "2019-10-31",
+    "Lelystad 2020": "2020-11-03",
+    "Vredepeel 2019": "2019-10-10",
+    "Vredepeel 2020": "2020-10-19"
+  },
+  "limits": [
+    "These are ACTUAL observed 2020 outcomes versus a simple 2019 observational predictor, NOT WOFOST validation.",
+    "Last positive tubersDW per plot on last sampling day does not establish commercial harvest equivalence.",
+    "Six site/cultivar group means in just two sites and ONE evaluation year are correlated, not independent experiments.",
+    "2019/2020 cultivar codes may encode different fields/varieties; no cultivar genetics are inferred.",
+    "Irrigation and N treatment classes vary within groups; using 2019 group means conflates changing management/weather.",
+    "The first empirical baseline does not use 2019/2020 weather, management, soil or calibrated crop coefficients.",
+    "The 2019/2020 country/site cannot be joined to Argentina 2022-2024 WOFOST outputs.",
+    "Descriptive errors use six heldout group MEANS rather than 2020 plots treated as independent models.",
+    "Original CC BY-NC-SA data and 2020 group means, cultivar-specific values, plot IDs are not republished.",
+    "No dry mass to fresh commercial yield conversion, Fe/Zn, safety or bioavailability."
+  ],
+  "no_external_validation_claim": true,
+  "no_wofost_predictions_or_calibration": true,
+  "original_cultivar_group_means_exported": false,
+  "original_plot_ids_exported": false,
+  "original_plot_values_exported": false,
+  "original_source_bytes_verified": true,
+  "predicted_field_trait": "tuber dry storage biomass (published tubersDW) kg/ha",
+  "source_csv_sha256": "8d129262dca38ac98a10f92ccfb1bc46454377020575959fd984c4c5bcab5768",
+  "source_doi": "10.7910/DVN/1LC6W7",
+  "source_license": "CC BY-NC-SA 4.0",
+  "source_license_uri": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "source_version": "3.0",
+  "status": "REAL_WUR_2020_HOLDOUT_EMPIRICAL_BASELINE_NOT_WOFOST_VALIDATION",
+  "total_original_distinct_physical_plots_site_year": 174,
+  "training_data_used_only_for_predictions": true,
+  "training_unique_physical_plots": 87,
+  "training_year": "2019"
+}

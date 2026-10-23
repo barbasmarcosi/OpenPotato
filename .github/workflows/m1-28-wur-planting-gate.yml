@@ -1,0 +1,82 @@
+name: M1-28 WUR published planting and physical plot treatment gate
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - ".github/workflows/m1-28-wur-planting-gate.yml"
+      - "scripts/wur_agromanagement_admission.py"
+      - "tests/test_wur_agromanagement_admission.py"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  verify-original-planting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Synthetic plot controls (no third-party packages)
+        env: {PYTHONPATH: ".:src"}
+        run: python -m unittest discover -s tests -p 'test_wur_agromanagement_admission.py' -v
+      - name: Verify version/license and hash of Harvard original source
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,urllib.parse,urllib.request
+          base='https://dataverse.harvard.edu/api'
+          doi='doi:10.7910/DVN/1LC6W7'
+          url=base+'/datasets/:persistentId/?persistentId='+urllib.parse.quote(doi,safe='')
+          request=urllib.request.Request(url,headers={'User-Agent':'OpenPotato-M1-28/1.0'})
+          with urllib.request.urlopen(request,timeout=55) as f: response=json.load(f)
+          if response.get('status')!='OK':raise ValueError('Original Dataverse metadata unavailable')
+          v=response['data']['latestVersion']
+          if (v.get('versionNumber'),v.get('versionMinorNumber'))!=(3,0):
+              raise ValueError('Source version changed')
+          if v.get('license',{}).get('name')!='CC BY-NC-SA 4.0':
+              raise ValueError('License changed')
+          files={f['dataFile']['id']:f for f in v['files']}
+          # Inventory public filenames/ids only; never copy data or unknown license content.
+          keywords=('irrig','soil','water','plot','npk','penet','groundwater','meta','weather','fertil')
+          candidates=sorted(
+              (item['dataFile']['filename'],item['dataFile']['id'],
+               bool(item.get('restricted',item['dataFile'].get('restricted',True))))
+              for item in v['files']
+              if any(k in item['dataFile']['filename'].lower() for k in keywords))
+          print('WUR public asset candidates (name, dataverse ID, restricted):',candidates)
+          entry=files.get(10850227)
+          if (not entry or entry.get('restricted',entry['dataFile'].get('restricted',True)) or
+              entry['dataFile'].get('filename')!='Plotspecific_processed.csv' or
+              entry['dataFile'].get('md5')!='bdf0f745e2c496868e3285a43df0ff04'):
+              raise ValueError('Original file changed or became restricted')
+          request=urllib.request.Request(base+'/access/datafile/10850227',headers={'User-Agent':'OpenPotato-M1-28/1.0'})
+          with urllib.request.urlopen(request,timeout=55) as f: blob=f.read()
+          if hashlib.sha256(blob).hexdigest()!='8d129262dca38ac98a10f92ccfb1bc46454377020575959fd984c4c5bcab5768':
+              raise ValueError('CSV bytes changed')
+          pathlib.Path('/tmp/m1-28-wur-private-source.csv').write_bytes(blob)
+          print('Verified original CC BY-NC-SA 4.0 source v3; temporary local file only')
+          PY
+      - name: Apply planting, date, treatment and holdout admission checks
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m scripts.wur_agromanagement_admission --source /tmp/m1-28-wur-private-source.csv --out /tmp/m1-28-only-aggregates
+          python - <<'PY'
+          import json,pathlib
+          report=json.loads(pathlib.Path('/tmp/m1-28-only-aggregates/m1_28_wur_plot_management_aggregate.json').read_text())
+          assert report['licensed_source_verified'] and report['source_license']=='CC BY-NC-SA 4.0'
+          assert report['training_year']=='2019' and report['untouched_holdout_year']=='2020'
+          assert len(report['site_year_aggregates'])==4
+          assert sum(r['original_observation_rows'] for r in report['site_year_aggregates'])==1824
+          assert sum(r['unique_physical_plots'] for r in report['site_year_aggregates'])==174
+          assert not report['real_wofost_field_simulation_admissible']
+          assert report['original_plot_ids_exported']==report['original_biomass_values_exported']==0
+          print('M1-28: source-verified calendar and management labels, NOT event schedules or model calibration')
+          PY
+      - name: Delete the original licensed study CSV
+        if: always()
+        run: rm -f /tmp/m1-28-wur-private-source.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m1-28-source-pinned-planting-and-treatment-COUNTS-NOT-MODEL
+          retention-days: 14
+          path: /tmp/m1-28-only-aggregates/m1_28_wur_plot_management_aggregate.json

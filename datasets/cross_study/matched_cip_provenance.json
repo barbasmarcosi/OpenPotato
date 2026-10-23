@@ -1,0 +1,21 @@
+{
+  "catalogue_accessions": 29,
+  "catalogue_doi": "10.21223/P3/LQOT7Z",
+  "catalogue_sha256": "76828f7b8514f4aa1501d33c27f30b301b6aa163564e5c969bc5f559cbcd37a5",
+  "derived_csv_sha256": "13616c0457a5f941b00919cebf59e397a746f3e62407fdab3ad3ac66772c0431",
+  "design": "EXPLORATORY source reconciliation only; NOT a paired field experiment or G×E",
+  "exactly_matching_accessions": 15,
+  "holetta_accessions": 45,
+  "holetta_doi": "10.3390/plants12142625",
+  "holetta_sha256": "5542aded6b4487016582dfc984308d0d8de779f388edd6006efe9525cc594bb0",
+  "iron_holetta_lower_count": 15,
+  "limits": [
+    "Catalogue sampling environments/year and laboratory equivalence NOT verified.",
+    "Same clone accession ID does not imply a common randomized design or identical planting stock.",
+    "Do not attribute deltas to environment or genetics or compute statistical significance.",
+    "Published catalogue minima/maxima do not imply confidence intervals or sample size.",
+    "Vitamin C exists for only some catalogue clones; no matching Holetta vitamin C values."
+  ],
+  "units": "Fe/Zn mg/kg dry matter in both sources; yields incomparable and not analyzed",
+  "zinc_holetta_lower_count": 15
+}

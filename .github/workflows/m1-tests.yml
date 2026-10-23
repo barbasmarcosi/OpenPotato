@@ -1,0 +1,82 @@
+name: M1 reproducibility
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "src/**"
+      - "datasets/**"
+      - "tests/**"
+      - ".github/workflows/m1-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pruebas offline, sin dependencias de terceros
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -v
+      - name: Ejecutar OP-M1-001 y verificar resultados
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m openpotato.m1 --output /tmp/openpotato-m1
+          test -s /tmp/openpotato-m1/coverage.csv
+          test -s /tmp/openpotato-m1/manifest.json
+          test -s /tmp/openpotato-m1/report.md
+          cat /tmp/openpotato-m1/report.md
+      - name: Comparar fichas oficiales con hashes y generar informe
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m openpotato.compare --output /tmp/openpotato-comparison
+          test -s /tmp/openpotato-comparison/preparation_comparison.csv
+          test -s /tmp/openpotato-comparison/comparison.md
+          cat /tmp/openpotato-comparison/comparison.md
+      - name: OP-N1-01 — hipótesis Fe/Zn absorbidos, fuentes primarias y USDA separadas
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m openpotato.absorption_opportunity --output /tmp/openpotato-n1-01
+          test -s /tmp/openpotato-n1-01/op_n1_01_absorption_opportunity.json
+          test -s /tmp/openpotato-n1-01/op_n1_01_research_opportunity.md
+          python - <<'PY'
+          import json
+          from decimal import Decimal
+          from pathlib import Path
+          p=Path('/tmp/openpotato-n1-01/op_n1_01_absorption_opportunity.json')
+          r=json.loads(p.read_text())
+          assert r['status']=='TESTABLE_RESEARCH_OPPORTUNITY_NOT_DEMONSTRATED_FOR_SAME_GENOTYPE'
+          trials={x['nutrient']:x for x in r['human_isotope_studies']}
+          assert set(trials)=={'iron','zinc'}
+          assert Decimal(trials['iron']['absorbed_absolute_difference_mg_per_study_meal'])==Decimal('0.11')
+          assert Decimal(trials['zinc']['absorbed_absolute_difference_mg_per_study_meal'])==Decimal('0.09')
+          assert not r['can_claim_joint_fe_zn_improvement']
+          assert not r['can_claim_iron_deficiency_or_anemia_reduction']
+          assert not r['can_claim_first_in_world_or_prior_work_absent']
+          assert not r['can_compare_USDA_dietary_RDA_to_absorbed_mg']
+          assert not r['can_claim_yield_or_glycoalkaloid_safety']
+          foods=r['usda_cooked_baseline_separate_population_and_preparation']
+          assert foods['official_food_ids']==['170438','170440']
+          assert not foods['directly_comparable_to_peruvian_human_isotope_trial']
+          print('OP-N1-01: verified independent Fe/Zn published group endpoints; no joint genotype or health claim')
+          PY
+      - name: Archivar informes computacionales
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-nutritional-coverage-and-preparations
+          retention-days: 30
+          path: |
+            /tmp/openpotato-m1/
+            /tmp/openpotato-comparison/
+            /tmp/openpotato-n1-01/
+

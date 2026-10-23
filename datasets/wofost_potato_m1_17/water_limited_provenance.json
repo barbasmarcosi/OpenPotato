@@ -1,0 +1,69 @@
+{
+  "crop_source_git_commit": "1ca91d7dbb5aaf6b41462162de03a8254812d3a5",
+  "daily_transpiration_cm_summed_from_WOFOST_TRA": true,
+  "disclaimers": [
+    "All soil hydraulic parameters and initial moisture are invented sensitivity cases.",
+    "Initial WAV concerns profile-level available water, NOT uniformly distributed initial root-zone moisture.",
+    "Weather is archived gridded NASA POWER; not farm weather station data.",
+    "WOFOST81_WLP_CWB models water limitation, but not nitrogen stress, disease or economic yield.",
+    "Both model outputs TWSO represent DRY storage organ biomass kg/ha, not fresh potato harvest.",
+    "No estimated Fe Zn bioavailability glycoalkaloids or experimental genotype effects.",
+    "Do not infer cultivar/site irrigation recommendations or drought adaptation from these simulations."
+  ],
+  "generic_variety": "Potato_701",
+  "hypothetical_soil_profiles": {
+    "coarse_assumed": {
+      "CRAIRC": 0.06,
+      "KSUB": 6.0,
+      "RDMSOL": 100.0,
+      "SM0": 0.38,
+      "SMFCF": 0.2,
+      "SMW": 0.08,
+      "SOPE": 6.0
+    },
+    "medium_assumed": {
+      "CRAIRC": 0.06,
+      "KSUB": 2.0,
+      "RDMSOL": 100.0,
+      "SM0": 0.47,
+      "SMFCF": 0.32,
+      "SMW": 0.12,
+      "SOPE": 2.0
+    }
+  },
+  "initial_available_water_cm_assumed": {
+    "dry": 2.0,
+    "intermediate": 10.0,
+    "wet": 18.0
+  },
+  "model": "Wofost81_WLP_CWB",
+  "nasa_cumulative_rainfall_uses_original_POWER_PRECTOTCORR_mm_divided_by_10": true,
+  "nitrogen_unlimited": true,
+  "no_irrigation": true,
+  "not_real_soil_or_genotype_prediction": true,
+  "other_assumed_site_parameters": {
+    "CO2": 410.0,
+    "IFUNRN": 0,
+    "NOTINF": 0.0,
+    "SSI": 0.0,
+    "SSMAX": 0.0
+  },
+  "pcse_version": "6.0.13",
+  "potential_baseline_csv_sha256": "f73939ce7727940d0de96150c162cd37a7ff963571c555e03aa76e91a7ed204c",
+  "scenario_csv_sha256": {
+    "water_limited_daily.csv": "a50537f09283069a0df51efda572c1ae5d7f535ecce0b1235660e5e00cab6011",
+    "water_limited_scenarios.csv": "b2d50faecedf1c59c41c083b79b368f49a88ca74486af3a2ae447de176e2fb40"
+  },
+  "schema_change_reason": "Add daily-derived real model transpiration and original NASA rainfall, without altering 48 modeled TWSO scenarios",
+  "schema_v1_daily_csv_sha256": "a50537f09283069a0df51efda572c1ae5d7f535ecce0b1235660e5e00cab6011",
+  "schema_v1_model_csv_sha256": "bf9d91f563c5945e2ff010f7cc27b86d9896ea8637a8c4d7a7bf771211d055aa",
+  "schema_version": "2.0",
+  "simulated_daily_rows": 8040,
+  "simulated_scenarios": 48,
+  "status": "WOFOST_WATER_LIMITED_SCENARIO_ONLY_UNCALIBRATED",
+  "water_stress_days_defined_RFTRA_lt_0_99": true,
+  "weather_snapshot_sha256": {
+    "neuquen": "8d0656de76652e14bef10fc1d79a9f19e73055052c889afb11f51959b5fb1d34",
+    "trenque_lauquen": "32b9404dadf8cf52a59e21a3c3094ea815d7d5485a995704b5b5bfcbd2b07e32"
+  }
+}

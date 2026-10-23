@@ -1,0 +1,75 @@
+name: CIP Dataverse metadata access audit
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths: [".github/workflows/cip-dataverse-audit.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Auditar DOI CIP, API Dataverse y archivos publicados
+        run: |
+          python - <<'PY'
+          import json, urllib.request, urllib.error, os, socket
+          base='https://data.cipotato.org'
+          ids={
+              "tetraploid_catalog":"doi:10.21223/P3/LQOT7Z",
+              "huancavelica_participatory":"doi:10.21223/P3/8NEIZP",
+              "rwanda_diploid":"doi:10.21223/MBBV5A",
+              "peru_nine_field_trials":"doi:10.21223/N11QJS",
+              "diploid_genetic_gains_replication":"doi:10.21223/9OJPJ7",
+              "peru_la_libertad_xrf":"doi:10.21223/HRLAI0",
+              "peru_huancavelica_xrf":"doi:10.21223/T7JUCL",
+              "peru_apurimac_xrf":"doi:10.21223/DTSA6Y",
+          }
+          result={}
+          def fetch(url):
+              req=urllib.request.Request(url,headers={"User-Agent":"OpenPotato-Research-Audit/0.1","Accept":"application/json"})
+              try:
+                  with urllib.request.urlopen(req,timeout=16) as r:
+                      content=r.read(3_000_000)
+                      return {"status":r.status,"url":r.geturl(),"content_type":r.headers.get("Content-Type",""),
+                              "bytes_read":len(content),"body":content}
+              except Exception as e:
+                  return {"error":str(e)[:240]}
+          health=fetch(base+'/api/info/version')
+          print("HEALTH", {k:v for k,v in health.items() if k!="body"},flush=True)
+          for key, doi in ids.items():
+              url=base+'/api/datasets/:persistentId/?persistentId='+urllib.parse.quote(doi,safe='')
+              response=fetch(url)
+              item={k:v for k,v in response.items() if k!="body"}
+              try:
+                  payload=json.loads(response.get("body",b"{}"))
+                  latest=payload.get("data",{}).get("latestVersion",{})
+                  item["title"]=next((f.get("value") for field in latest.get("metadataBlocks",{}).values()
+                     for f in field.get("fields",[]) if f.get("typeName")=="title"),None)
+                  item["version"]=f"{latest.get('versionNumber')}.{latest.get('versionMinorNumber')}"
+                  item["license"]=latest.get("license")
+                  item["termsOfUse"]=latest.get("termsOfUse")
+                  item["files"]=[{"id":f.get("dataFile",{}).get("id"),"filename":f.get("dataFile",{}).get("filename"),
+                                "contentType":f.get("dataFile",{}).get("contentType"),
+                                "filesize":f.get("dataFile",{}).get("filesize"),
+                                "md5":f.get("dataFile",{}).get("md5"),
+                                "restricted":f.get("restricted")} for f in latest.get("files",[])]
+              except Exception as e:item["parse_error"]=str(e)
+              result[key]=item
+              print("DOI",key,doi,json.dumps(item,ensure_ascii=False)[:18000],flush=True)
+          os.makedirs("/tmp/cip-dataverse-audit",exist_ok=True)
+          with open("/tmp/cip-dataverse-audit/metadata_access_audit.json","w") as f:
+              json.dump({"service":{k:v for k,v in health.items() if k!="body"},"datasets":result},
+                        f,indent=2,ensure_ascii=False)
+          PY
+      - name: Guardar evidencia sin almacenar XLS de licencia no verificada
+        uses: actions/upload-artifact@v4
+        with:
+          name: cip-dataverse-metadata-access-audit
+          retention-days: 30
+          path: /tmp/cip-dataverse-audit/metadata_access_audit.json

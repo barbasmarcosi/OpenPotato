@@ -1,0 +1,8 @@
+[project]
+name = "openpotato"
+version = "0.1.0"
+description = "Herramientas reproducibles para investigación nutricional de papa"
+requires-python = ">=3.11"
+license = {text = "License pending; no permission granted by this metadata"}
+[tool.setuptools.packages.find]
+where = ["src"]

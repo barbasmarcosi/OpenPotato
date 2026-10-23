@@ -1,0 +1,55 @@
+name: M1 CIP Peru published Fe Zn summary
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/cip_peru_selected.py"
+      - "tests/test_cip_peru_selected.py"
+      - ".github/workflows/cip-peru-selected.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+jobs:
+  original-public-summary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Full offline test suite
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Download PUBLIC Dataverse Table 16 only (file 6979)
+        run: |
+          curl --fail -L --retry 2 --max-time 60             "https://data.cipotato.org/api/access/datafile/6979" -o /tmp/cip-peru-6979.tab
+          echo "39843e2d1cea114ee18f32e9cd40219c14a8ff32a70ea737bb6438ee609e9dc8  /tmp/cip-peru-6979.tab" | sha256sum -c -
+      - name: Extract Fe Zn mean n SD min max without inventing biological replicates
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.cip_peru_selected --tsv /tmp/cip-peru-6979.tab --out /tmp/cip-peru-summary
+          cat /tmp/cip-peru-summary/peru_selected_report.md
+          cat /tmp/cip-peru-summary/peru_selected_provenance.json
+      - name: Archive verified public derivatives
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-cip-peru-public-summary
+          retention-days: 30
+          path: /tmp/cip-peru-summary/
+      - name: Commit legal public derivative with provenance
+        if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+        run: |
+          mkdir -p datasets/cip_peru_summary
+          cp /tmp/cip-peru-summary/*.csv /tmp/cip-peru-summary/*.json             /tmp/cip-peru-summary/*.md datasets/cip_peru_summary/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/cip_peru_summary/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1): pin public CIP Peru iron zinc summary without restricted microdata"
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi

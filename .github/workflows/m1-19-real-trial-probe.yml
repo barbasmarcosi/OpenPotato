@@ -1,0 +1,177 @@
+name: M1-19 public potato trial dataset metadata discovery
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths: [".github/workflows/m1-19-real-trial-probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect Harvard Dataverse versioned metadata without downloading trial participants or plot records
+        run: |
+          python - <<'PY'
+          import json,urllib.parse,urllib.request,pathlib,hashlib
+          doi="doi:10.7910/DVN/1LC6W7"
+          url="https://dataverse.harvard.edu/api/datasets/:persistentId/?persistentId="+urllib.parse.quote(doi,safe="")
+          request=urllib.request.Request(url,headers={"User-Agent":"OpenPotato-M1-19-MetadataAudit/0.1"})
+          with urllib.request.urlopen(request,timeout=50) as resp:
+              response=json.load(resp)
+          if response.get("status")!="OK":raise ValueError("Harvard Dataverse lookup unsuccessful")
+          info=response["data"];ver=info["latestVersion"]
+          version=(ver.get("versionNumber"),ver.get("versionMinorNumber"))
+          print("HARVARD_VERSION",version,"id",info.get("id"),flush=True)
+          fields={p["typeName"]:p.get("value") for block in ver.get("metadataBlocks",{}).values()
+                  for p in block.get("fields",[])}
+          for name in ["title","author","datasetContact","dsDescription","subject","license","termsOfUse","otherReferences"]:
+              if name in fields:
+                  val=fields[name]
+                  if name in ["author","datasetContact","dsDescription"]:
+                      print("METADATA_FIELD",name,"entries",len(val) if isinstance(val,list) else "n/a",flush=True)
+                  else:
+                      print("METADATA_FIELD",name,str(val)[:2000],flush=True)
+          print("DATASET_LICENSE",json.dumps(ver.get("license")),flush=True)
+          print("DATASET_TERMS",str(ver.get("termsOfUse"))[:1200],flush=True)
+          files=[]
+          for file in ver.get("files",[]):
+              df=file.get("dataFile",{})
+              item={"file_id":df.get("id"),"filename":df.get("filename"),
+                    "content_type":df.get("contentType"),"bytes":df.get("filesize"),
+                    "tabular_variables":df.get("variablesCount"),
+                    "row_count":df.get("recordsCount"),
+                    "restricted":file.get("restricted",df.get("restricted")),
+                    "md5":df.get("md5"),"sha256":df.get("checksum",{}).get("value")
+                    if df.get("checksum",{}).get("type","").upper()=="SHA-256" else None}
+              files.append(item)
+              print("DATAVERSE_FILE",json.dumps(item,ensure_ascii=False),flush=True)
+          output={"source_doi":doi,"version":version,"license":ver.get("license"),
+                  "terms_of_use":ver.get("termsOfUse"),"file_count":len(files),
+                  "files":files,"provenance":"Harvard Dataverse metadata only; no plot records transferred"}
+          p=pathlib.Path("/tmp/m1-19-discovery");p.mkdir(exist_ok=True)
+          (p/"harvard_public_file_inventory.json").write_text(
+              json.dumps(output,indent=2,ensure_ascii=False,sort_keys=True)+"\n")
+          PY
+      - name: Check original published 2019-2020 plot CSV byte integrity and nonidentifying schema
+        run: |
+          python - <<'PY'
+          import collections,csv,hashlib,io,json,pathlib,urllib.request,zipfile
+          root=pathlib.Path("/tmp/m1-19-discovery")
+          allowed=[
+            (10850227,"Plotspecific_processed.csv","bdf0f745e2c496868e3285a43df0ff04"),
+            (10850226,"Plotspecific_processed_meta.xlsx","71fd84275db40cc56b3ba14427efb8f5"),
+            (10284791,"Irrigation.xlsx","5f044499a3e60b4a7fcdf1aba6dc62d7"),
+            (10284792,"Weatherfile_lelystad.xlsx","01c530be2aa24e5b2c6227730c154de5"),
+            (10284786,"Weatherfile_vredepeel.xlsx","e0f66d4a71d7a9e2bce06cb17581f2ae"),
+          ]
+          report={"source_doi":"10.7910/DVN/1LC6W7","version":"3.0",
+                  "license":"CC BY-NC-SA 4.0","no_original_rows_exported":True,
+                  "original_source_files":[]}
+          for fileid,name,expected_md5 in allowed:
+              request=urllib.request.Request(
+                f"https://dataverse.harvard.edu/api/access/datafile/{fileid}",
+                headers={"User-Agent":"OpenPotato-M1-19-SourceSchemaOnly/0.1"})
+              with urllib.request.urlopen(request,timeout=55) as r:
+                  payload=r.read()
+              if hashlib.md5(payload).hexdigest()!=expected_md5:
+                  raise ValueError("Published original checksum changed: "+name)
+              record={"file_id":fileid,"name":name,
+                      "source_md5":expected_md5,
+                      "source_sha256":hashlib.sha256(payload).hexdigest(),
+                      "original_bytes":len(payload)}
+              if name.endswith(".csv"):
+                  raw=payload.decode("utf-8-sig")
+                  sample=raw[:4000]
+                  dialect=csv.Sniffer().sniff(sample,delimiters=",;\t")
+                  rows=csv.reader(io.StringIO(raw),dialect=dialect)
+                  header=next(rows)
+                  if len(header)!=len(set(header)):
+                      raise ValueError("Duplicate source CSV column names")
+                  nonempty=collections.Counter()
+                  count=0
+                  for row in rows:
+                      if len(row)!=len(header):
+                          raise ValueError("Inconsistent source CSV row width")
+                      count+=1
+                      for i,v in enumerate(row):
+                          if v.strip():nonempty[header[i]]+=1
+                  record.update(columns=header,column_count=len(header),
+                                data_rows=count,nonempty_per_column=dict(nonempty),
+                                detected_delimiter=dialect.delimiter)
+              else:
+                  with zipfile.ZipFile(io.BytesIO(payload)) as z:
+                      import xml.etree.ElementTree as ET
+                      wb=ET.fromstring(z.read("xl/workbook.xml"))
+                      ns={"x":"http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+                      sheets=wb.find("x:sheets",ns)
+                      record["workbook_sheet_names"]=[x.attrib["name"] for x in sheets]
+                      record["sheet_count"]=len(record["workbook_sheet_names"])
+              report["original_source_files"].append(record)
+              print("SCHEMA_SOURCE",json.dumps(record,ensure_ascii=False),flush=True)
+          (root/"source_schemas_no_plot_data.json").write_text(
+              json.dumps(report,ensure_ascii=False,sort_keys=True,indent=2)+"\n",
+              encoding="utf-8")
+          PY
+      - name: Audit measured numeric availability versus literal NA, and read variable dictionary
+        run: |
+          python -m pip install "openpyxl==3.1.5"
+          python - <<'PY'
+          import collections,csv,hashlib,io,json,math,pathlib,urllib.request
+          from openpyxl import load_workbook
+          root=pathlib.Path("/tmp/m1-19-discovery")
+          verified={"Plotspecific_processed.csv":(10850227,"bdf0f745e2c496868e3285a43df0ff04"),
+                    "Plotspecific_processed_meta.xlsx":(10850226,"71fd84275db40cc56b3ba14427efb8f5")}
+          data={}
+          for name,(fid,md5) in verified.items():
+              with urllib.request.urlopen(urllib.request.Request(
+                 f"https://dataverse.harvard.edu/api/access/datafile/{fid}",
+                 headers={"User-Agent":"OpenPotato-M1-19-PrivateProcessing/0.1"}),timeout=60) as r:
+                  raw=r.read()
+              assert hashlib.md5(raw).hexdigest()==md5
+              data[name]=raw
+          rows=list(csv.DictReader(io.StringIO(data["Plotspecific_processed.csv"].decode("utf-8-sig"))))
+          desired=["Year","Date","Location","Plotnumber","Cultivar","Nitrogen","Irrigation","Shadow",
+                    "Yield_gross_t.ha","FWyield","tubersFW","tubersDW","tuberDMpercentage","LAI"]
+          def numeric(v):
+              try:
+                  x=float(v)
+                  return math.isfinite(x)
+              except (TypeError,ValueError):return False
+          counts={col:{"numeric":sum(numeric(r[col]) for r in rows),
+                       "na_marker":sum(r[col].strip().upper() in ("NA","NAN","NULL","") for r in rows)}
+                  for col in desired}
+          combos=collections.Counter((r["Year"],r["Location"]) for r in rows)
+          print("MEASURED_VALUE_COVERAGE",json.dumps(counts,sort_keys=True),flush=True)
+          print("SITE_YEAR_COUNTS",json.dumps([{"year":y,"location":loc,"count":n}
+                                               for (y,loc),n in sorted(combos.items())]),flush=True)
+          wb=load_workbook(io.BytesIO(data["Plotspecific_processed_meta.xlsx"]),read_only=True,data_only=True)
+          sheet=wb.active
+          head=[list(row) for row in sheet.iter_rows(min_row=1,max_row=7,values_only=True)]
+          print("META_DICTIONARY_FIRST_SEVEN_STRUCTURAL_ROWS",json.dumps(
+              head,ensure_ascii=False,default=str)[:4200],flush=True)
+          selected=[]
+          for row in sheet.iter_rows(values_only=True):
+              vals=[str(x)[:280] for x in row if x is not None]
+              if vals and any(any(key.lower() in v.lower() for key in
+                 ("tubersDW","tuberDMpercentage","Yield_gross_t.ha","FWyield","tubersFW"))
+                 for v in vals):
+                  selected.append(vals[:6])
+          print("META_DICTIONARY_SELECTED_UNIT_DEFS",json.dumps(selected[:20],ensure_ascii=False),flush=True)
+          result={"source":"doi:10.7910/DVN/1LC6W7","license":"CC BY-NC-SA 4.0",
+                  "measured_numeric_field_counts":counts,
+                  "site_year_counts":[{"year":y,"location":loc,"row_count":n}
+                                      for (y,loc),n in sorted(combos.items())],
+                  "dictionary_matching_variable_definitions":selected[:20],
+                  "original_plot_rows_exported":False,
+                  "warning":"Metadata and column coverages only; never infer units or independence from these counts."}
+          (root/"real_field_numeric_availability.json").write_text(
+              json.dumps(result,indent=2,ensure_ascii=False,sort_keys=True)+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: M1-19-harvard-dataverse-metadata-only
+          path: /tmp/m1-19-discovery/
+          retention-days: 30

@@ -1,0 +1,58 @@
+name: M1-05 Multi-environment potato yield
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/potato_gxe.py"
+      - "tests/test_potato_gxe.py"
+      - ".github/workflows/gxe-potato.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  empirical-demonstration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Tests offline de integridad y diseño
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Descargar versión inmutable del ensayo real Tai 1971
+        run: |
+          curl -fL --retry 2 --max-time 60             https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/1dcc2bf5f955cc1224a3e1307256e1fe86b68dae/csv/agridat/tai.potato.csv             -o /tmp/tai-potato.csv
+          echo "Downloaded source digest:"
+          sha256sum /tmp/tai-potato.csv
+          test "$(git hash-object /tmp/tai-potato.csv)" = "6d86e84e3bd62e94cddc7fecb62be53b5b9c9fb6"
+      - name: Analizar 8 genotipos y seis ambientes sin réplicas inventadas
+        env:
+          PYTHONPATH: .:src
+        run: |
+          echo "6a758579b091050f02da6a352742201a73d5e3bd7ee2c7624f2a7e9e141a9055  /tmp/tai-potato.csv" | sha256sum -c -
+          python -m scripts.potato_gxe --csv /tmp/tai-potato.csv --sha256 "6a758579b091050f02da6a352742201a73d5e3bd7ee2c7624f2a7e9e141a9055" --out /tmp/potato-gxe
+          cat /tmp/potato-gxe/gxE_report.md
+      - name: Guardar artefactos de la ejecución
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-05-tai-potato-aggregate-means
+          retention-days: 30
+          path: /tmp/potato-gxe/
+      - name: Guardar SOLO resultados derivados sin redistribuir archivo fuente
+        if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+        run: |
+          mkdir -p datasets/multienvironment
+          cp /tmp/potato-gxe/gxE_report.md /tmp/potato-gxe/gxE_provenance.json              /tmp/potato-gxe/yield_stability.csv /tmp/potato-gxe/rank_crossovers.csv              datasets/multienvironment/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/multienvironment/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1-05): pin analytical results of real six-environment potato yield trial"
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi

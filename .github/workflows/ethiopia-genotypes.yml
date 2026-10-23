@@ -1,0 +1,56 @@
+name: M1 identified genotype trial
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/ethiopia_genotypes.py"
+      - "tests/test_ethiopia_genotypes.py"
+      - ".github/workflows/ethiopia-genotypes.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  genotype-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pruebas offline del parser y el modelo
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Descargar artículo científico primario (JATS XML abierto)
+        run: |
+          curl --fail --location --retry 2 --max-time 90 --silent --show-error             "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10383430/fullTextXML"             --output /tmp/ethiopia-trial.xml
+          printf '%s  %s\n'             "f3afe300384cd6f7b0c24bf44dbe24ebad8ef1de6ceefcd414845794e6aacd78"             "/tmp/ethiopia-trial.xml" | sha256sum --check --status
+      - name: Extraer 45 genotipos con hierro, zinc, rendimiento y materia seca
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.ethiopia_genotypes             --xml /tmp/ethiopia-trial.xml --out /tmp/ethiopia-results
+          cat /tmp/ethiopia-results/genotype_trial_report.md
+          cat /tmp/ethiopia-results/genotype_trial_provenance.json
+      - name: Conservar salidas auditables
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-ethiopia-published-genotype-means
+          retention-days: 30
+          path: /tmp/ethiopia-results/
+      - name: Versionar datos derivados de artículo CC BY
+        if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+        run: |
+          mkdir -p datasets/cultivars
+          cp /tmp/ethiopia-results/genotype_trial_* datasets/cultivars/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/cultivars/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1): pin 45 published genotype means from Seid et al 2023"
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi

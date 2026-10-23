@@ -1,0 +1,44 @@
+name: M1 CIP nine-sites public SOIL context
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/cip_peru_soil_context.py"
+      - "tests/test_cip_peru_soil_context.py"
+      - ".github/workflows/cip-peru-soil-context.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-soil-context:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: All offline tests
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Download public soil table ONLY
+        run: |
+          curl --fail --location --retry 2 --max-time 60             "https://data.cipotato.org/api/access/datafile/6970" -o /tmp/cip-soils-6970.tab
+          echo "bd64f98a69694dd057b0f808308acc080eeca7b839875c3fd583a5d2f40bc158  /tmp/cip-soils-6970.tab" | sha256sum -c -
+      - name: Preserve 9-site soil pH Fe Zn including censor flags
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.cip_peru_soil_context             --tsv /tmp/cip-soils-6970.tab --out /tmp/m1-10-soil
+          cat /tmp/m1-10-soil/peru_soil_site_report.md
+          cat /tmp/m1-10-soil/peru_soil_site_provenance.json
+      - name: Archive public soil context only
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-10-cip-peru-soil-context
+          retention-days: 30
+          path: /tmp/m1-10-soil/

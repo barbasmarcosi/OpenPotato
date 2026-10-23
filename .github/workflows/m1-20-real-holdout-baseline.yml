@@ -1,0 +1,118 @@
+name: M1-20 REAL 2019 to 2020 potato dry-tuber empirical holdout benchmark
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/wur_2020_empirical_holdout.py"
+      - "tests/test_wur_2020_empirical_holdout.py"
+      - ".github/workflows/m1-20-real-holdout-baseline.yml"
+  workflow_dispatch:
+jobs:
+  real-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Entire repository scientific test suite + synthetic temporal leakage checks
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Verify Harvard Dataverse original is public, version 3.0 and restricted license unchanged
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,urllib.parse,urllib.request
+          doi="doi:10.7910/DVN/1LC6W7"
+          url="https://dataverse.harvard.edu/api/datasets/:persistentId/?persistentId="+urllib.parse.quote(doi,safe="")
+          req=urllib.request.Request(url,headers={"User-Agent":"OpenPotato-M1-20-VerifiedRealBenchmark/0.1"})
+          with urllib.request.urlopen(req,timeout=55) as response:
+              metadata=json.load(response)
+          if metadata.get("status")!="OK":raise ValueError("Dataverse unavailable")
+          ver=metadata["data"]["latestVersion"]
+          if (ver.get("versionNumber"),ver.get("versionMinorNumber"))!=(3,0):
+              raise ValueError("Dataset version changed; manual re-admission required")
+          if ver.get("license",{}).get("name")!="CC BY-NC-SA 4.0":
+              raise ValueError("Original noncommercial/sharealike license changed")
+          items={f["dataFile"]["id"]:f for f in ver.get("files",[])}
+          entry=items.get(10850227)
+          if (entry is None or entry.get("restricted",entry["dataFile"].get("restricted",True)) or
+              entry["dataFile"].get("filename")!="Plotspecific_processed.csv" or
+              entry["dataFile"].get("md5")!="bdf0f745e2c496868e3285a43df0ff04"):
+              raise ValueError("Original source file access/name/checksum changed")
+          req=urllib.request.Request(
+              "https://dataverse.harvard.edu/api/access/datafile/10850227",
+              headers={"User-Agent":"OpenPotato-M1-20-VerifiedRealBenchmark/0.1"})
+          with urllib.request.urlopen(req,timeout=55) as response: data=response.read()
+          if hashlib.sha256(data).hexdigest()!="8d129262dca38ac98a10f92ccfb1bc46454377020575959fd984c4c5bcab5768":
+              raise ValueError("Source data bytes modified")
+          folder=pathlib.Path("/tmp/wur2020-licensed-private-original-not-artifact")
+          folder.mkdir(parents=True,exist_ok=True)
+          (folder/"Plotspecific_processed.csv").write_bytes(data)
+          print("AUTHORITATIVE: WUR public scientific source 3.0; CC BY-NC-SA 4.0; SHA256 verified")
+          PY
+      - name: Calculate first REAL year-heldout empirical potato baseline (NOT WOFOST)
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.wur_2020_empirical_holdout \
+            --source /tmp/wur2020-licensed-private-original-not-artifact/Plotspecific_processed.csv \
+            --out /tmp/m1-20-aggregate-metrics-CC-BY-NC-SA
+      - name: Validate no 2020 raw yields or plot-level data in published outputs
+        run: |
+          python - <<'PY'
+          import json,pathlib,math
+          folder=pathlib.Path("/tmp/m1-20-aggregate-metrics-CC-BY-NC-SA")
+          files=list(folder.iterdir())
+          assert len(files)==2 and all(p.is_file() for p in files)
+          m=json.loads((folder/"wur_2020_true_holdout_empirical_baselines.json").read_text())
+          assert m["status"]=="REAL_WUR_2020_HOLDOUT_EMPIRICAL_BASELINE_NOT_WOFOST_VALIDATION"
+          assert m["training_year"]=="2019"
+          assert m["completely_reserved_evaluation_year"]=="2020"
+          assert m["training_unique_physical_plots"]==87
+          assert m["heldout_unique_physical_plots"]==87
+          assert m["heldout_group_means_not_independent_site_years"]==6
+          assert m["different_independent_evaluation_years"]==1
+          assert m["source_license"]=="CC BY-NC-SA 4.0"
+          assert m["no_wofost_predictions_or_calibration"] is True
+          assert m["original_plot_values_exported"] is False
+          assert m["original_plot_ids_exported"] is False
+          assert m["original_cultivar_group_means_exported"] is False
+          assert all(math.isfinite(m[x]["rmse_kg_dry_ha"]) and m[x]["rmse_kg_dry_ha"]>=0 for x in (
+              "2019_site_only_empirical_persistence","2019_site_by_cultivar_empirical_persistence"))
+          assert "plots" not in m and "group_observations" not in m
+          print((folder/"wur_2020_true_holdout_empirical_baselines.md").read_text())
+          print("M1-20: FIRST REAL 2020 prediction errors against strictly 2019-only empirical baseline, NOT WOFOST.")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m1-20-REAL-DESCRIPTIVE-2020-WUR-HOLDOUT-CC-BY-NC-SA-NOT-WOFOST
+          retention-days: 30
+          path: /tmp/m1-20-aggregate-metrics-CC-BY-NC-SA/
+  publish:
+    needs: real-benchmark
+    if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: m1-20-REAL-DESCRIPTIVE-2020-WUR-HOLDOUT-CC-BY-NC-SA-NOT-WOFOST
+          path: research/real_holdout_m1_20/
+      - name: Publish ONLY licensed aggregated predictive errors with attribution
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research/real_holdout_m1_20/
+          if ! git diff --cached --quiet; then
+            git commit -m "research(M1-20): pin REAL 2020 temporal empirical baseline errors, no plot data, CC BY-NC-SA"
+            git fetch origin research/m1-nutrition-baseline
+            git rebase origin/research/m1-nutrition-baseline
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi

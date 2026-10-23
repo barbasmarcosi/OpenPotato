@@ -1,0 +1,244 @@
+name: M1-29 WUR original irrigation workbook structural audit
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - ".github/workflows/m1-29-wur-irrigation-inventory.yml"
+      - "scripts/wur_irrigation_source_inventory.py"
+      - "tests/test_wur_irrigation_source_inventory.py"
+      - "scripts/wur_irrigation_schema_probe.py"
+      - "tests/test_wur_irrigation_schema_probe.py"
+      - "scripts/wur_irrigation_event_admission.py"
+      - "tests/test_wur_irrigation_event_admission.py"
+      - "scripts/wur_rainfall_cross_source_qc.py"
+      - "tests/test_wur_rainfall_cross_source_qc.py"
+      - "scripts/wur_irrigation_trial_window_coverage.py"
+      - "tests/test_wur_irrigation_trial_window_coverage.py"
+      - "scripts/wur_irrigation_provenance_gate.py"
+      - "tests/test_wur_irrigation_provenance_gate.py"
+      - "docs/evidence/m1-34-irrigation-semantics.json"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  source-irrigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pin Excel reader dependency for source inventory only
+        run: python -m pip install openpyxl==3.1.5
+      - name: Unit tests with invented weatherless irrigation workbook
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m unittest discover -s tests -p 'test_wur_irrigation_source_inventory.py' -v
+          python -m unittest discover -s tests -p 'test_wur_irrigation_schema_probe.py' -v
+          python -m unittest discover -s tests -p 'test_wur_irrigation_event_admission.py' -v
+          python -m unittest discover -s tests -p 'test_wur_rainfall_cross_source_qc.py' -v
+          python -m unittest discover -s tests -p 'test_wur_irrigation_trial_window_coverage.py' -v
+          python -m unittest discover -s tests -p 'test_wur_irrigation_provenance_gate.py' -v
+      - name: Verify public original irrigation file, version, license, and original checksum
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,urllib.parse,urllib.request
+          base='https://dataverse.harvard.edu/api'
+          doi='doi:10.7910/DVN/1LC6W7'
+          req=urllib.request.Request(
+              base+'/datasets/:persistentId/?persistentId='+urllib.parse.quote(doi,safe=''),
+              headers={'User-Agent':'OpenPotato-M1-29-IrrigationInventory/1.0'})
+          with urllib.request.urlopen(req,timeout=50) as f: obj=json.load(f)
+          if obj.get('status')!='OK':raise ValueError('Dataverse source missing')
+          meta=obj['data']['latestVersion']
+          if (meta.get('versionNumber'),meta.get('versionMinorNumber'))!=(3,0):
+              raise ValueError('Dataset revision changed')
+          if meta.get('license',{}).get('name')!='CC BY-NC-SA 4.0':
+              raise ValueError('Original source license changed')
+          original=next((x for x in meta['files'] if x['dataFile']['id']==10284791),None)
+          if not original or original.get('restricted',original['dataFile'].get('restricted',True)):
+              raise ValueError('Irrigation source access not verified')
+          data=original['dataFile']
+          if data['filename']!='Irrigation.xlsx' or not data.get('md5'):
+              raise ValueError('Irrigation source identity or source MD5 missing')
+          req=urllib.request.Request(base+'/access/datafile/10284791',
+                                    headers={'User-Agent':'OpenPotato-M1-29-IrrigationInventory/1.0'})
+          with urllib.request.urlopen(req,timeout=60) as f: content=f.read()
+          if hashlib.md5(content).hexdigest()!=data['md5']:
+              raise ValueError('Irrigation source bytes differ from Dataverse MD5')
+          pathlib.Path('/tmp/m1-29-licensed-original-Irrigation.xlsx').write_bytes(content)
+          print('Original irrigation file, version and CC BY-NC-SA 4.0 license verified')
+          print('New original irrigation SHA256 for independent follow-up pin:',hashlib.sha256(content).hexdigest())
+          plot_file=next((x for x in meta['files'] if x['dataFile']['id']==10850227),None)
+          if (not plot_file or plot_file.get('restricted',plot_file['dataFile'].get('restricted',True))
+              or plot_file['dataFile'].get('filename')!='Plotspecific_processed.csv'
+              or plot_file['dataFile'].get('md5')!='bdf0f745e2c496868e3285a43df0ff04'):
+              raise ValueError('Original study plot source metadata changed')
+          req=urllib.request.Request(base+'/access/datafile/10850227',
+                                    headers={'User-Agent':'OpenPotato-M1-31-TreatmentLink/1.0'})
+          with urllib.request.urlopen(req,timeout=60) as f: plot_bytes=f.read()
+          if hashlib.sha256(plot_bytes).hexdigest()!='8d129262dca38ac98a10f92ccfb1bc46454377020575959fd984c4c5bcab5768':
+              raise ValueError('Original plot source SHA256 changed')
+          pathlib.Path('/tmp/m1-31-licensed-private-plots.csv').write_bytes(plot_bytes)
+          print('Verified original plot file for read-only irrigation treatment join')
+
+          stations={
+            10284792:('Weatherfile_lelystad.xlsx','ad66a23468a969b5795a656fb6989499e790a3e18179b9e3158f203b12ab8636'),
+            10284786:('Weatherfile_vredepeel.xlsx','0bb40a5aa91ae6bfd02a8e8b4f825e4d834207884c1f2f44caa12fd0e88a1fd6'),
+          }
+          by_id={item['dataFile']['id']:item for item in meta['files']}
+          for file_id,(name,sha) in stations.items():
+              entry=by_id.get(file_id)
+              if not entry or entry.get('restricted',entry['dataFile'].get('restricted',True)) or entry['dataFile']['filename']!=name:
+                  raise ValueError('Weather source identity or access changed')
+              req=urllib.request.Request(base+'/access/datafile/'+str(file_id),
+                      headers={'User-Agent':'OpenPotato-M1-32-RainfallCrossSourceQC/1.0'})
+              with urllib.request.urlopen(req,timeout=60) as f: weather_bytes=f.read()
+              if hashlib.sha256(weather_bytes).hexdigest()!=sha:
+                  raise ValueError('Weather source checksum changed')
+              pathlib.Path('/tmp/m1-32-private-'+name).write_bytes(weather_bytes)
+          print('Verified both original weather files for source rainfall QC; no weather rows published')
+
+
+          PY
+      - name: Count only physical workbook structure and tentative header tokens
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m scripts.wur_irrigation_source_inventory --source /tmp/m1-29-licensed-original-Irrigation.xlsx --out /tmp/m1-29-safe-aggregates
+          python - <<'PY'
+          import json,pathlib
+          r=json.loads(pathlib.Path('/tmp/m1-29-safe-aggregates/m1_29_irrigation_workbook_structure_only.json').read_text())
+          assert r['source_doi']=='10.7910/DVN/1LC6W7' and r['source_file_id']==10284791
+          assert r['source_license']=='CC BY-NC-SA 4.0'
+          assert r['sheet_count']==2 and r['checksum_independently_pinned_before_publication']
+          assert r['source_sha256']=='3def99dfb0643abe4d524431702a224bf62abd9489b306fbb89d54fdb3c9f109'
+          assert not r['original_sheet_names_or_cell_values_exported']
+          assert not r['plot_level_irrigation_dates_or_amounts_verified']
+          assert not r['real_wofost_irrigation_schedule_ready']
+          print('M1-29 original structure only; no irrigation plot join or model run approved')
+          PY
+      - name: M1-30 audit six source columns per year and first metadata rows without records
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m scripts.wur_irrigation_schema_probe --source /tmp/m1-29-licensed-original-Irrigation.xlsx --out /tmp/m1-29-safe-aggregates
+          python - <<'PY'
+          import json,pathlib
+          f=pathlib.Path('/tmp/m1-29-safe-aggregates/m1_30_irrigation_source_column_profile.json')
+          r=json.loads(f.read_text())
+          assert r['source_sha256']=='3def99dfb0643abe4d524431702a224bf62abd9489b306fbb89d54fdb3c9f109'
+          assert r['profile']['date_counts_by_year']=={'2019':258,'2020':268}
+          assert len(r['profile']['column_profiles'])==6
+          assert r['original_records_exported']==0 and not r['wofost_field_run_admissible']
+          assert not r['water_units_validated'] and not r['site_plot_treatment_join_verified']
+          print('M1-30 typed schema evidence captured. No source irrigation events approved or exported.')
+          PY
+      - name: M1-31 verify W1/W2 labels and real physical plot treatment assignment
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m scripts.wur_irrigation_event_admission --irrigation /tmp/m1-29-licensed-original-Irrigation.xlsx --plots /tmp/m1-31-licensed-private-plots.csv --out /tmp/m1-29-safe-aggregates
+          python - <<'PY'
+          import json,pathlib
+          report=json.loads(pathlib.Path('/tmp/m1-29-safe-aggregates/m1_31_source_verified_treatment_event_counts_only.json').read_text())
+          assert report['source_licence']=='CC BY-NC-SA 4.0'
+          assert report['all_site_year_treatment_labels_reconciled']
+          assert report['irrigation_mm_per_day_approved'] is False
+          assert report['workbook_global_unit_token_does_not_validate_treatment_units'] is True
+          assert report['raw_source_rows_or_irrigation_doses_exported']==0
+          assert report['plot_ids_exported']==report['raw_individual_dates_exported']==0
+          assert len(report['site_year_aggregated_counts'])==4
+          assert not report['complete_zero_imputation_permitted']
+          assert not report['wofost_agromanagement_ready']
+          assert not report['2020_field_biomass_used_for_calibration']
+          print('Source field identity and plot irrigation labels checked; no agronomic WOFOST model run')
+          PY
+      - name: M1-32 cross-check original daily rainfall at exactly matching site-year-date keys
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m scripts.wur_rainfall_cross_source_qc --irrigation /tmp/m1-29-licensed-original-Irrigation.xlsx --lelystad /tmp/m1-32-private-Weatherfile_lelystad.xlsx --vredepeel /tmp/m1-32-private-Weatherfile_vredepeel.xlsx --out /tmp/m1-29-safe-aggregates
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('/tmp/m1-29-safe-aggregates/m1_32_cross_source_rainfall_counts_only.json')
+          r=json.loads(p.read_text())
+          assert r['source_license']=='CC BY-NC-SA 4.0'
+          assert r['weather_rain_source_declared_unit']=='mm'
+          assert len(r['site_year_aggregates'])==4
+          assert sum(x['same_site_same_day_records'] for x in r['site_year_aggregates'])==526
+          assert r['all_526_paired_rainfall_days_observe_10x_source_numeric_relation']
+          assert sum(x['rain_daily_values_NOT_matching_tenfold_relation'] for x in r['site_year_aggregates'])==0
+          assert all(x['max_absolute_tenfold_residual_in_weather_numeric_scale']==0 for x in r['site_year_aggregates'])
+          assert not r['RAIN_field_independently_declared_mm_but_register_declared_cm']
+          assert not r['irrigation_register_water_unit_approved']
+          assert not r['irrigation_W1_W2_mm_approved'] and not r['blanks_treated_as_zero']
+          assert not r['2020_crop_biomass_consulted'] and not r['WOFOST_crop_predictions_performed']
+          assert r['original_daily_dates_or_measurements_exported']==0
+          print('M1-32: 526 paired climate/rainfall records, no assumption of sensor or irrigation unit equivalence')
+          PY
+      - name: M1-33 source-verified trial window irrigation UNKNOWN coverage
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m scripts.wur_irrigation_trial_window_coverage --irrigation /tmp/m1-29-licensed-original-Irrigation.xlsx --out /tmp/m1-29-safe-aggregates
+          python - <<'PY'
+          import json,pathlib
+          r=json.loads(pathlib.Path('/tmp/m1-29-safe-aggregates/m1_33_irrigation_trial_window_UNKNOWN_counts.json').read_text())
+          assert r['source_sha_checked'] and r['source_license']=='CC BY-NC-SA 4.0'
+          assert len(r['site_year_aggregate_counts'])==4
+          assert sum(sum(win['recorded_days'] for win in row['windows'].values())
+                     for row in r['site_year_aggregate_counts'])==526
+          observed={(x['site'],x['year']):(
+              x['conservative_calendar_days_including_both_anchors'],
+              x['registered_calendar_days_within_window'],
+              x['calendar_days_without_register_row_UNKNOWN'],
+              x['W1_unknown_total_blanks_plus_unrecorded_days'],
+              x['W2_unknown_total_blanks_plus_unrecorded_days'],
+            ) for x in r['site_year_aggregate_counts']}
+          assert observed=={
+              ('Lelystad',2019):(190,127,63,179,149),
+              ('Vredepeel',2019):(176,131,45,102,99),
+              ('Lelystad',2020):(198,134,64,189,168),
+              ('Vredepeel',2020):(182,134,48,95,80),
+          }
+          assert sum(v[2] for v in observed.values())==220
+          assert sum(v[3] for v in observed.values())==565
+          assert sum(v[4] for v in observed.values())==496
+          assert r['blanks_or_absent_calendar_rows_are_NOT_zero']
+          assert not r['source_unit_W1_W2_independently_confirmed']
+          assert not r['source_blank_semantics_confirmed']
+          assert not r['wofost_irrigation_agromanagement_admissible']
+          assert not r['wofost_crop_yield_predictions_executed']
+          assert r['source_dates_or_water_doses_exported']==0
+          assert r['crop_yields_or_plot_ids_exported']==0
+          for row in r['site_year_aggregate_counts']:
+              assert row['registered_calendar_days_within_window'] <= row['conservative_calendar_days_including_both_anchors']
+              assert row['W1_unknown_total_blanks_plus_unrecorded_days'] >= row['calendar_days_without_register_row_UNKNOWN']
+              assert row['W2_unknown_total_blanks_plus_unrecorded_days'] >= row['calendar_days_without_register_row_UNKNOWN']
+          print('M1-33 source window counts verified. UNKNOWN remains UNKNOWN, not irrigation=0.')
+          PY
+      - name: M1-34 fail-closed independent provenance for water units and UNKNOWN semantics
+        env: {PYTHONPATH: ".:src"}
+        run: |
+          python -m scripts.wur_irrigation_provenance_gate --m1-31 /tmp/m1-29-safe-aggregates/m1_31_source_verified_treatment_event_counts_only.json --m1-33 /tmp/m1-29-safe-aggregates/m1_33_irrigation_trial_window_UNKNOWN_counts.json --evidence docs/evidence/m1-34-irrigation-semantics.json --out /tmp/m1-29-safe-aggregates
+          python - <<'PY'
+          import json,pathlib
+          report=json.loads(pathlib.Path('/tmp/m1-29-safe-aggregates/m1_34_irrigation_evidence_blockers_ONLY.json').read_text())
+          assert report['status']=='BLOCKED_M1_34_PRIMARY_WATER_SEMANTICS_MISSING'
+          assert len(report['unresolved_claims'])==7
+          assert report['original_aggregate_balance']=={
+            'days':746,'recorded':526,'no_row':220,
+            'W1_unknown':565,'W2_unknown':496,
+            'W1_positive':181,'W2_positive':250}
+          assert not report['W1_W2_schedule_generation_permitted']
+          assert not report['field_WOFOST_simulation_admissible']
+          assert report['rainfall_factor_ten_NOT_evidence_for_W1_W2_units']
+          assert report['source_daily_measurements_exported']==0
+          assert report['plot_ids_or_field_yields_exported']==0
+          assert not report['2020_biomass_holdout_used_for_calibration']
+          print('M1-34 verified: seven independent source claims remain unverified; WOFOST forbidden.')
+          PY
+      - name: Erase transient original licensed Excel file
+        if: always()
+        run: rm -f /tmp/m1-29-licensed-original-Irrigation.xlsx /tmp/m1-31-licensed-private-plots.csv /tmp/m1-32-private-Weatherfile_lelystad.xlsx /tmp/m1-32-private-Weatherfile_vredepeel.xlsx
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m1-29-original-WUR-irrigation-WORKBOOK-STRUCTURE-ONLY
+          retention-days: 14
+          path: /tmp/m1-29-safe-aggregates/*.json

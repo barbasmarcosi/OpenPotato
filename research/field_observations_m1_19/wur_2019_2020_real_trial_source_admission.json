@@ -1,0 +1,96 @@
+{
+  "column_count": 79,
+  "doi": "10.7910/DVN/1LC6W7",
+  "important_limits": [
+    "1824 source rows are observations collected on various dates, NOT independent harvests.",
+    "A tubersDW cell is numerically parseable but harvest-date matching still must be verified.",
+    "All numeric availability counts exclude literal NA, NaN, NULL and blank values.",
+    "Source license is CC BY-NC-SA 4.0, not CC0 or unrestricted commercial rights.",
+    "Comparing these Dutch 2019-2020 observations to Argentinian 2022-2024 modeled weather would be invalid.",
+    "Published original site soil/weather/irrigation and real variety coefficients require harmonization.",
+    "No Fe or Zn measurements and no nutrition claim may be inferred.",
+    "No real model error, predictive accuracy or external validation computed here.",
+    "No original row data or plot IDs or individual yields are retained in public derivatives."
+  ],
+  "license": "CC BY-NC-SA 4.0",
+  "license_uri": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "measurements_available": [
+    {
+      "finite_numeric_entries": 1048,
+      "non_numeric_or_missing_entries": 776,
+      "original_column": "tubersDW",
+      "source_dictionary_unit": "kg_dry_tuber_per_ha"
+    },
+    {
+      "finite_numeric_entries": 1063,
+      "non_numeric_or_missing_entries": 761,
+      "original_column": "tubersFW",
+      "source_dictionary_unit": "kg_fresh_tuber_per_ha"
+    },
+    {
+      "finite_numeric_entries": 454,
+      "non_numeric_or_missing_entries": 1370,
+      "original_column": "tuberDMpercentage",
+      "source_dictionary_unit": "percent_tuber_dry_matter"
+    },
+    {
+      "finite_numeric_entries": 87,
+      "non_numeric_or_missing_entries": 1737,
+      "original_column": "Yield_gross_t.ha",
+      "source_dictionary_unit": "tonnes_fresh_per_ha_gross_yield"
+    },
+    {
+      "finite_numeric_entries": 1063,
+      "non_numeric_or_missing_entries": 761,
+      "original_column": "FWyield",
+      "source_dictionary_unit": "tonnes_fresh_per_ha"
+    },
+    {
+      "finite_numeric_entries": 996,
+      "non_numeric_or_missing_entries": 828,
+      "original_column": "LAI",
+      "source_dictionary_unit": "dimensionless_leaf_area_index"
+    }
+  ],
+  "noncommercial_and_sharealike_restrictions_apply": true,
+  "observation_rows_exported": 0,
+  "original_file_id": 10850227,
+  "plot_dates_detected_as_raw_strings_only": true,
+  "source_dataset_version": "3.0",
+  "source_file_name": "Plotspecific_processed.csv",
+  "source_md5": "bdf0f745e2c496868e3285a43df0ff04",
+  "source_sha256": "8d129262dca38ac98a10f92ccfb1bc46454377020575959fd984c4c5bcab5768",
+  "source_variable_definition_unambiguous_for_tubersDW": "kg/ha, dry weight of the tubers",
+  "source_variable_dictionary_file_id": 10850226,
+  "source_variable_dictionary_sha256": "b6bada9e4d9352e2975dbf1159299b114369a36598aa924b3222fa5ce101945c",
+  "source_yield_values_exported": 0,
+  "stage": "ADMISSION_GATE_ONLY",
+  "status": "REAL_FIELD_SOURCE_STRUCTURE_VERIFIED_NOT_WOFOST_CALIBRATION",
+  "total_original_rows_inspected_without_export": 1824,
+  "year_site_counts": [
+    {
+      "distinct_original_plot_identifiers_count": 45,
+      "row_count": 495,
+      "site": "Lelystad",
+      "year": "2019"
+    },
+    {
+      "distinct_original_plot_identifiers_count": 42,
+      "row_count": 504,
+      "site": "Vredepeel",
+      "year": "2019"
+    },
+    {
+      "distinct_original_plot_identifiers_count": 45,
+      "row_count": 405,
+      "site": "Lelystad",
+      "year": "2020"
+    },
+    {
+      "distinct_original_plot_identifiers_count": 42,
+      "row_count": 420,
+      "site": "Vredepeel",
+      "year": "2020"
+    }
+  ]
+}

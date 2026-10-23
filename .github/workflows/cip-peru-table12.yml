@@ -1,0 +1,72 @@
+name: M1 CIP Peru Table 12 public Fe Zn summaries
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/cip_peru_table12.py"
+      - "tests/test_cip_peru_table12.py"
+      - ".github/workflows/cip-peru-table12.yml"
+  workflow_dispatch:
+
+jobs:
+  verified-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Full offline scientific test suite
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Download only CIP public file 6980 and verify fixed bytes
+        run: |
+          curl --fail --location --retry 2 --max-time 60 \
+            "https://data.cipotato.org/api/access/datafile/6980" \
+            -o /tmp/cip-peru-6980.tab
+          echo "0f33b843e286eab15ad71c6c110592adc60709997d75b2b1c5f7365ca99f6152  /tmp/cip-peru-6980.tab" | sha256sum -c -
+      - name: Reconcile all 14 Table 16 published materials without double counting
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.cip_peru_table12 \
+            --tsv /tmp/cip-peru-6980.tab --out /tmp/m1-11
+          cat /tmp/m1-11/peru_table12_report.md
+          cat /tmp/m1-11/peru_table12_provenance.json
+      - name: Archive source-verified public derivatives
+        uses: actions/upload-artifact@v4
+        with:
+          name: cip-peru-table12-68-mineral-summaries
+          retention-days: 30
+          path: /tmp/m1-11/
+
+  publish-public-derivative:
+    # Only a passing push-run can commit these openly licensed public derivatives.
+    needs: verified-import
+    if: github.event_name == 'push' && github.ref == 'refs/heads/research/m1-nutrition-baseline'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: cip-peru-table12-68-mineral-summaries
+          path: datasets/cip_peru_table12
+      - name: Store only validated public summary derivatives on research branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datasets/cip_peru_table12/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(M1-11): pin public CIP Table 12 34-material Fe Zn summaries"
+            git push origin HEAD:research/m1-nutrition-baseline
+          fi

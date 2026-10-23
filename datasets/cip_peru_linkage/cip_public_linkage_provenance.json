@@ -1,0 +1,27 @@
+{
+  "admission_to_mineral_gxe_model": "DENIED_UNTIL_LINKABLE_PRIMARY_ASSAYS",
+  "derived_csv_sha256": "273fc03762772ab5b5e81110587bb1c869019f718fa7f1cd71af28b5f291e04f",
+  "limits": [
+    "NO verified genotype × location × season × block × plot × lab-sample Fe/Zn data here.",
+    "Positional columns are NOT evidence of per-plot chemistry keys.",
+    "A flowering/harvest PVS preference is NOT a mineral assay.",
+    "The mineral shipment calendar is NOT a table of measured mineral outcomes.",
+    "The soil sample list describes SOIL samples, not tuber tissue Fe/Zn assays.",
+    "Table 12 Fe/Zn entries are pooled genotype-level published summaries, NOT plots.",
+    "Absence of validated links is not proof that plot measurements do not exist elsewhere.",
+    "No participant-level values retained, joined, logged or redistributed."
+  ],
+  "privacy": "No row-level or person-level source values emitted; source bytes are transient.",
+  "public_source_count": 6,
+  "source_dataset_version": "1.0",
+  "source_doi": "10.21223/N11QJS",
+  "source_export_sha256": {
+    "field_calendar": "35a8060590288bf67dc5eec94d1f7850f6e8746431dfe883c8aaaa2601ef8a1b",
+    "flowering_selection": "a44760b27715de114307c1f0efe058b2d5e9c0d17243989daf835c8e18d7abaa",
+    "harvest_selection": "5b28f757d1cf2478e2be3e2eebe05af3e37b9bbb884f4de6faf1bc0be9ae0fb3",
+    "mineral_shipment": "7b56c321e63e4bd9a33543b32f339c70e88e69ec441ae365d80e7b6e119082aa",
+    "soil_sample_list": "5058b84cea069d72ee92fb855ce0692c004ed8cb5a7bac41367490fa4d4972ae",
+    "tuber_mineral_summary": "0f33b843e286eab15ad71c6c110592adc60709997d75b2b1c5f7365ca99f6152"
+  },
+  "verified_plot_to_mineral_assay_linkages": 0
+}

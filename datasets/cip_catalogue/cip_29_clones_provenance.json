@@ -1,0 +1,33 @@
+{
+  "clone_summaries": 29,
+  "dataverse_version": "1.2",
+  "derived_csv_sha256": "76828f7b8514f4aa1501d33c27f30b301b6aa163564e5c969bc5f559cbcd37a5",
+  "dictionary_sha256": "905c0cf39f4ad1d2b9d34dfb698440f49304992d6370f3ec8a76afbdb7298525",
+  "dictionary_url": "https://data.cipotato.org/api/access/datafile/2212",
+  "dictionary_variables": 25,
+  "doi": "10.21223/P3/LQOT7Z",
+  "license": "CC BY 4.0 per Dataverse dataset termsOfUse",
+  "pareto_candidates": 10,
+  "restrictions": [
+    "The 29 entries are catalogue-level summaries, not replicate plot data or multi-environment study.",
+    "No genotype-by-environment model or statistical significance may be computed from catalogue ranges.",
+    "Comparing concentration and yield by Pareto is descriptive; not validation of combined performance.",
+    "Catalogue disease labels and flavor are categorical, not safety or farmer acceptance certificates.",
+    "Min/max must not be imputed as confidence intervals; missing vitamin C must not become zero.",
+    "Yield kg/plant cannot be converted to t/ha without planting density and plot design.",
+    "Dried-basis nutrients cannot be compared to fresh-weight USDA values without matched conversions.",
+    "Source retains pedigree identifiers, not confirmed whole-genome sequence or genotype proof."
+  ],
+  "source_column_count": 77,
+  "source_rows": 29,
+  "source_sha256": "58706bfb9052220dccc89412d14033c750e7911861d03b5e6c4c5871b2135226",
+  "source_sheet": "Catalog_BIOT_clones",
+  "source_url": "https://data.cipotato.org/api/access/datafile/2211",
+  "trait_definition": {
+    "iron": "mg/kg DRY matter",
+    "reported_min_max": "published range; not a confidence interval, no sample sizes provided",
+    "vitamin_c": "mg/100g DRY matter",
+    "yield": "kg/plant as labeled in source, NOT t/ha",
+    "zinc": "mg/kg DRY matter"
+  }
+}

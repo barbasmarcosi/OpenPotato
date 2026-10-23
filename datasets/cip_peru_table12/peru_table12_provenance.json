@@ -1,0 +1,28 @@
+{
+  "controls": 4,
+  "derived_csv_sha256": "01f16d03af0c16a01be8ccef77aadbd9811459a3d6a2b9ad98a84cf5784633ed",
+  "evaluated_clones": 30,
+  "excluded_nonmaterial_rows": 7,
+  "excluded_rows_csv_sha256": "7361dc893cf08b26659b59b5c2c9cf0f73ee374a95b2b1d22845adf56f09281d",
+  "limits": [
+    "Table 16 is a source subset of Table 12, not an independent cohort or replication.",
+    "Summary n is not known to represent independent biological plots.",
+    "Published SD/min/max cannot recover environment-specific residual variation.",
+    "No p-values, causal genetic conclusions, GxE, heritability or inferential ranking.",
+    "Other tabular traits (TTYNA/TglyFW) excluded pending verified variable dictionary and units.",
+    "No genotype-specific soil matches or human bioavailability data are inferred."
+  ],
+  "materials": 34,
+  "materials_not_in_table16": 20,
+  "materials_overlapping_table16": 14,
+  "mineral_summary_rows": 68,
+  "source_doi": "10.21223/N11QJS",
+  "source_export_md5": "b6335e33f8bc8ab3309a56904083911a",
+  "source_export_sha256": "0f33b843e286eab15ad71c6c110592adc60709997d75b2b1c5f7365ca99f6152",
+  "source_file_id": 6980,
+  "source_stored_metadata_md5": "6ba7f982da7cc2073693cf0b1e13f253",
+  "source_url": "https://data.cipotato.org/api/access/datafile/6980",
+  "statistics_overlapping_table16": 28,
+  "table16_derived_sha256": "2d6d070e5cb191c65e0438548c5864eb5c4480cdc96cfc27fc1796939826dc61",
+  "table16_source_file_id": 6979
+}

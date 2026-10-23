@@ -1,0 +1,57 @@
+{
+  "assumed_co2_ppm_not_observed": 410.0,
+  "assumed_planting_dates_not_recorded_field_dates": true,
+  "assumed_soil_not_measured": {
+    "CRAIRC": 0.06,
+    "RDMSOL": 100.0,
+    "SM0": 0.45,
+    "SMFCF": 0.3,
+    "SMW": 0.1
+  },
+  "crop": "potato",
+  "crop_parameters_source_commit": "1ca91d7dbb5aaf6b41462162de03a8254812d3a5",
+  "crop_source": "https://github.com/ajwdewit/WOFOST_crop_parameters",
+  "daily_output_records": 1340,
+  "derived_csv_sha256": {
+    "generic_potato_potential_daily.csv": "70847184dd12ac88f03d98bf0c81c615f500f447047bf6bfca3ebb850ab78595",
+    "generic_potato_potential_scenarios.csv": "f73939ce7727940d0de96150c162cd37a7ff963571c555e03aa76e91a7ed204c"
+  },
+  "does_not_simulate_water_stress": true,
+  "limits": [
+    "Generic published potato variety is NOT a CIP or locally calibrated cultivar.",
+    "WOFOST81_PP models potential production; historical rainfall DOES NOT cause drought stress.",
+    "TWSO is storage organ DRY mass kg/ha, not observed or fresh tuber yield.",
+    "No calibrated soil properties, irrigation, local management, disease or weather-station validation.",
+    "Weather is historical gridded NASA POWER data, not a field observation.",
+    "No observed potato yields, no genotype contrasts or GxE genetic inference.",
+    "No Fe/Zn concentrations, glycoalkaloid safety, bioavailability or nutrition per hectare inferred.",
+    "Crop emergence and harvest dates are researcher ASSUMPTIONS, not planting records."
+  ],
+  "model": "Wofost81_PP",
+  "nasa_power_api": "https://power.larc.nasa.gov/api/temporal/daily/point",
+  "pcse_version": "6.0.13",
+  "pinned_nasa_weather_sha256_verified": true,
+  "scenarios": 8,
+  "site_coordinates": {
+    "neuquen": {
+      "lat": -38.95,
+      "lon": -68.06
+    },
+    "trenque_lauquen": {
+      "lat": -35.97,
+      "lon": -62.73
+    }
+  },
+  "status": "WOFOST_POTENTIAL_DRY_STORAGE_BIOMASS_UNCALIBRATED",
+  "unlimited_water_and_nutrients": true,
+  "variety": "Potato_701",
+  "weather_date_window": [
+    "2022-01-01",
+    "2024-04-01"
+  ],
+  "weather_gridded_observations_not_field_station_data": true,
+  "weather_json_sha256": {
+    "neuquen": "8d0656de76652e14bef10fc1d79a9f19e73055052c889afb11f51959b5fb1d34",
+    "trenque_lauquen": "32b9404dadf8cf52a59e21a3c3094ea815d7d5485a995704b5b5bfcbd2b07e32"
+  }
+}

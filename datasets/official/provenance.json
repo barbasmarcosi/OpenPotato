@@ -1,0 +1,21 @@
+{
+  "archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+  "caveat": "Historical analytical/calculated values; not cultivar-specific or proof of bioavailability.",
+  "no_imputation": true,
+  "records": {
+    "170438": {
+      "description": "Potatoes, boiled, cooked in skin, flesh, without salt",
+      "filename": "potato_fdc_170438_usda.csv",
+      "reported_nutrients": 24,
+      "sha256": "5ebd6b64e1f9a8e692e31b2bb8576c9ab2b1c805fe084cbfa4804a452a90dabd"
+    },
+    "170440": {
+      "description": "Potatoes, boiled, cooked without skin, flesh, without salt",
+      "filename": "potato_fdc_170440_usda.csv",
+      "reported_nutrients": 24,
+      "sha256": "e700a845c89a1e2e1da9ad29b20be80f32682e9eddf8b9853908ef8d0b940017"
+    }
+  },
+  "release": "SR Legacy April 2018",
+  "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip"
+}

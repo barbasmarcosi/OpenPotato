@@ -1,0 +1,51 @@
+{
+  "archive_sha256": "70457ee9d9342f43bda2010318c85f04210c689fdeb9cd2da4c513b0e8dbc655",
+  "categories": "market types; no confirmation of genetic cultivar identity",
+  "csv_sha256": "13a2a46f77fe02b81f1ec7e90807121faa419d6ab148e877d8153184489bac6a",
+  "foods": {
+    "gold": {
+      "description": "Potatoes, gold, without skin, raw",
+      "fdc_id": "2346403",
+      "publication_date": "2022-10-28"
+    },
+    "red": {
+      "description": "Potatoes, red, without skin, raw",
+      "fdc_id": "2346402",
+      "publication_date": "2022-10-28"
+    },
+    "russet": {
+      "description": "Potatoes, russet, without skin, raw",
+      "fdc_id": "2346401",
+      "publication_date": "2022-10-28"
+    }
+  },
+  "form": "raw potato flesh without skin; NOT cooked",
+  "historical_versions": {
+    "gold": [
+      {
+        "description": "Potatoes, gold, without skin, raw",
+        "fdc_id": "2346403",
+        "publication_date": "2022-10-28"
+      }
+    ],
+    "red": [
+      {
+        "description": "Potatoes, red, without skin, raw",
+        "fdc_id": "2346402",
+        "publication_date": "2022-10-28"
+      }
+    ],
+    "russet": [
+      {
+        "description": "Potatoes, russet, without skin, raw",
+        "fdc_id": "2346401",
+        "publication_date": "2022-10-28"
+      }
+    ]
+  },
+  "interpretation": "Composition from published USDA data; not a randomized experiment or proof of genetics",
+  "missing": "not_reported and below_quantification are not zeros",
+  "release": "USDA Foundation Foods April 2026",
+  "selection_rule": "most recent publication_date; reject ties",
+  "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2026-04-30.zip"
+}

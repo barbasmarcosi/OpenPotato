@@ -1,0 +1,9 @@
+dataset_key,doi,scope,data_access,license_status,files_verified,primary_payload_state,notes
+CIP_CLONE_CATALOGUE,10.21223/P3/LQOT7Z,29 biofortified clone summaries,public,CC_BY_4_0,2,verified_and_normalized,XLS and dictionary both pinned by SHA256
+CIP_PERU_NINE,10.21223/N11QJS,9 field experiments in 5 departments,public,CC_BY_4_0,16,public_schemas_6982_6972_6971_6968_6975_and_6980_verified_other_files_not_fully_audited,Six public CIP sources authenticated by SHA and inspected without participant records; 6979 is a 14-material subset of 6980; 6970 contains nine soil sites; zero verified plot-to-assay links and XRF departmental microdata remain restricted
+CIP_HUANCAVELICA_PVS,10.21223/P3/8NEIZP,participatory Huancavelica trial,restricted_primary_dataset,CC_BY_4_0_general_terms,2,not_downloaded,Primary tab restricted and dictionary open
+CIP_LALIBERTAD_XRF,10.21223/HRLAI0,La Libertad mineral assay datasets,restricted_primary_dataset,CC_BY_4_0_general_terms,3,not_downloaded,Two XRF tab files restricted
+CIP_HUANCAVELICA_XRF,10.21223/T7JUCL,Huancavelica XRF mineral dataset,restricted_primary_dataset,CC_BY_4_0_general_terms,2,not_downloaded,One XRF tab restricted
+CIP_APURIMAC_XRF,10.21223/DTSA6Y,Apurimac mineral assay datasets,restricted_primary_dataset,CC_BY_4_0_general_terms,3,not_downloaded,Two XRF tab files restricted
+CIP_DIPLOID_GAINS,10.21223/9OJPJ7,replication of genetic gains paper,metadata_only,CC_BY_4_0,0,no_files_listed,Dataset contains public metadata but no files listed
+CIP_RWANDA_DIPLOID,10.21223/MBBV5A,Rwanda diploid clones multi site,public_files,TERMS_UNSPECIFIED,5,not_downloaded,Need contact rights-holder before reuse or redistribution

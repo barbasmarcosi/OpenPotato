@@ -1,0 +1,36 @@
+{
+  "acquisitions": "acquisition_samples -> market_acquisition",
+  "archive_sha256": "70457ee9d9342f43bda2010318c85f04210c689fdeb9cd2da4c513b0e8dbc655",
+  "files": {
+    "retail_sample_measurements.csv": "05279383cf732e8a29cf4ead71e2cc96bb6fb50d5b0789c39fd1c0457ece5e97",
+    "retail_sample_summary.csv": "aa4040463dbb92a2295063c4293cc5de95fba788bb83460d891580454c0c2834"
+  },
+  "foundation_ids": {
+    "gold": {
+      "description": "Potatoes, gold, without skin, raw",
+      "fdc_id": "2346403",
+      "publication_date": "2022-10-28"
+    },
+    "red": {
+      "description": "Potatoes, red, without skin, raw",
+      "fdc_id": "2346402",
+      "publication_date": "2022-10-28"
+    },
+    "russet": {
+      "description": "Potatoes, russet, without skin, raw",
+      "fdc_id": "2346401",
+      "publication_date": "2022-10-28"
+    }
+  },
+  "limitations": "Retail samples not independent genotypes, not an agricultural randomized field design.",
+  "measurement_rows": 96,
+  "n_purchase_samples_per_market_type": 8,
+  "nutrients": [
+    "iron",
+    "zinc",
+    "potassium",
+    "vitamin_c"
+  ],
+  "selection": "input_food -> sample_food -> sub_sample_food -> food_nutrient -> sub_sample_result",
+  "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2026-04-30.zip"
+}

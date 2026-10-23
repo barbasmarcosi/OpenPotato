@@ -1,0 +1,46 @@
+name: M1 CIP Peru Table 16 row-level provenance
+
+on:
+  push:
+    branches: [research/m1-nutrition-baseline]
+    paths:
+      - "scripts/cip_peru_row_lineage.py"
+      - "tests/test_cip_peru_row_lineage.py"
+      - ".github/workflows/cip-peru-row-lineage.yml"
+      - "scripts/cip_peru_selected.py"
+      - "datasets/cip_peru_summary/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-public-row-provenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run full offline scientific validation suite
+        env:
+          PYTHONPATH: .:src
+        run: python -m unittest discover -s tests -v
+      - name: Download ONLY the public CIP Dataverse Table 16 TSV
+        run: |
+          curl --fail --location --retry 2 --max-time 60             "https://data.cipotato.org/api/access/datafile/6979" -o /tmp/cip-peru-6979.tab
+          echo "39843e2d1cea114ee18f32e9cd40219c14a8ff32a70ea737bb6438ee609e9dc8  /tmp/cip-peru-6979.tab" | sha256sum -c -
+      - name: Verify all mineral aggregates against each original TSV row
+        env:
+          PYTHONPATH: .:src
+        run: |
+          python -m scripts.cip_peru_row_lineage             --tsv /tmp/cip-peru-6979.tab --out /tmp/m1-09-row-lineage
+          cat /tmp/m1-09-row-lineage/peru_row_lineage_report.md
+          cat /tmp/m1-09-row-lineage/peru_row_lineage_provenance.json
+      - name: Archive complete source row and footer audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-09-cip-peru-source-row-provenance
+          retention-days: 30
+          path: /tmp/m1-09-row-lineage/
