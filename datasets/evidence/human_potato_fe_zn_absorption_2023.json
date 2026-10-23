@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "register_type": "published_summary_manually_transcribed_not_individual_patient_data",
+  "scope": "two_separate_2023_randomized_crossover_trials_of_biofortified_potato_in_peruvian_women",
+  "studies": [
+    {
+      "id": "PERU_FE_2023",
+      "nutrient": "iron",
+      "doi": "10.1016/j.tjnut.2023.04.010",
+      "primary_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10308245/",
+      "published_year": 2023,
+      "participants": 28,
+      "meal_g": "460",
+      "unit_intake": "mg_per_100g_as_published",
+      "unit_absorbed": "mg_per_serving",
+      "control": {
+        "intake_mg_per_100g": "0.31",
+        "fractional_absorption_pct": "16.6",
+        "absorbed_mg_per_meal": "0.24",
+        "absorbed_group_ci95_mg": [
+          "0.20",
+          "0.28"
+        ]
+      },
+      "biofortified": {
+        "intake_mg_per_100g": "0.63",
+        "fractional_absorption_pct": "12.1",
+        "absorbed_mg_per_meal": "0.35",
+        "absorbed_group_ci95_mg": [
+          "0.30",
+          "0.41"
+        ]
+      },
+      "uncertainty_note": "published group geometric means and group 95% CIs; do not subtract intervals or infer paired-effect CI",
+      "method": "single_blind_randomized_crossover_stable_iron_isotopes",
+      "material_linkage": "iron_enriched_clone_vs_peruanita_not_verified_same_genotype_as_Zn_study"
+    },
+    {
+      "id": "PERU_ZN_2023",
+      "nutrient": "zinc",
+      "doi": "10.1016/j.tjnut.2023.08.028",
+      "primary_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10613720/",
+      "published_year": 2023,
+      "participants": 37,
+      "meal_g": "500",
+      "unit_intake": "mg_per_100g_as_published",
+      "unit_absorbed": "mg_per_serving",
+      "control": {
+        "intake_mg_per_100g": "0.32",
+        "fractional_absorption_pct": "25.5",
+        "absorbed_mg_per_meal": "0.40",
+        "absorbed_group_sd_mg": "0.11"
+      },
+      "biofortified": {
+        "intake_mg_per_100g": "0.48",
+        "fractional_absorption_pct": "20.8",
+        "absorbed_mg_per_meal": "0.49",
+        "absorbed_group_sd_mg": "0.13"
+      },
+      "uncertainty_note": "published group mean and SD; no standard error of paired difference reconstructed",
+      "method": "single_blind_randomized_crossover_stable_zinc_isotopes",
+      "material_linkage": "zinc_enriched_potato_vs_regular_not_verified_same_genotype_as_Fe_study"
+    }
+  ],
+  "source_identity_confirmed_from_published_abstracts": true,
+  "same_genotype_both_minerals_measured_in_humans": false,
+  "individual_participant_data_available": false,
+  "field_yield_and_safety_assessed_for_trial_materials": false,
+  "clinical_anemia_reduction_tested": false,
+  "source_curator_note": "Summary statistics transcribed from primary published abstracts; group means are rounded, effects are descriptive not pooled."
+}
