@@ -114,7 +114,7 @@ def usda_baseline(directory, reference_path):
     provenance=json.loads((directory/"provenance.json").read_text(encoding="utf-8"))
     if provenance.get("no_imputation") is not True or set(provenance.get("records",{}))!=USDA_FOODS:
         raise ValueError("USDA official original inventory missing")
-    if provenance.get("archive_sha256")!="b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5fd0":
+    if provenance.get("archive_sha256")!="b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0":
         raise ValueError("USDA SR Legacy archive identity changed")
     food={}
     refs=load_references(reference_path)
