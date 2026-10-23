@@ -80,6 +80,16 @@ class AbsorptionOpportunityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"numerically inconsistent"):
             validate_studies(d)
 
+    def test_mutated_primary_published_mean_rejected_even_if_plausible(self):
+        d=copy.deepcopy(self.evidence)
+        d["studies"][0]["biofortified"]["absorbed_mg_per_meal"]="0.34"
+        with self.assertRaisesRegex(ValueError,"primary abstract endpoint changed"):
+            validate_studies(d)
+        d=copy.deepcopy(self.evidence)
+        d["studies"][1]["control"]["fractional_absorption_pct"]="25.4"
+        with self.assertRaisesRegex(ValueError,"primary abstract endpoint changed"):
+            validate_studies(d)
+
     def test_group_ci_cannot_be_renamed_or_paired_effect_reconstructed(self):
         d=copy.deepcopy(self.evidence)
         del d["studies"][0]["control"]["absorbed_group_ci95_mg"]
@@ -128,7 +138,6 @@ class AbsorptionOpportunityTests(unittest.TestCase):
             for filename in ("op_n1_01_absorption_opportunity.json","op_n1_01_research_opportunity.md"):
                 self.assertEqual((Path(first)/filename).read_bytes(),(Path(second)/filename).read_bytes())
             prose=(Path(first)/"op_n1_01_research_opportunity.md").read_text()
-            self.assertIn("MISM", prose) if False else None
             self.assertIn("NO son métricas intercambiables",prose)
             self.assertIn("misma variedad",prose)
 if __name__=="__main__":
