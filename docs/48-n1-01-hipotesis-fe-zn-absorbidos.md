@@ -34,3 +34,13 @@ La siguiente acción antes de un laboratorio es establecer **búsqueda sistemát
 - Reporte regenerable: OP-N1-01 JSON y Markdown, con comparación USDA de 400 g totalmente separada de los isótopos y sin usar un índice único de bienestar nutricional.
 
 **Criterio de cierre de N1-01:** dos fuentes primarias identificadas, cálculo de diferencias descriptivas reproducible, USDA original verificado, faltantes y límites explícitos, pruebas negativas contra mezcla de estudios o comparación ilegítima de medidas. Revisión experta externa aún no realizada.
+
+### Qué es nuevo dentro de OpenPotato y qué no
+
+Los artículos sobre absorción de Fe y Zn **ya estaban citados** en el [estado del arte inicial](01-estado-del-arte.md); OP-N1-01 **no los descubrió** ni generó nuevos datos humanos. Lo nuevo en esta iteración es convertirlos en un contrato de endpoints y fuentes **reproducible, comprobable por CI**, con límites de comparación, rechazos explícitos de efectos combinados y una pregunta preregistrable. Determinar si la hipótesis del mismo genotipo está realmente abierta exige la [revisión N1-02](https://github.com/barbasmarcosi/OpenPotato/issues/9).
+
+### Decisión estadística futura a preregistrar
+
+El estudio experimental propuesto deberá definir **antes** de recolectar nuevos resultados los efectos primarios sobre mg de Fe y Zn absorbidos por ración del **mismo genotipo y control**, sus estimandos, intervalos de confianza y corrección de multiplicidad (por ejemplo estrategia de hipótesis conjuntas o prueba secuencial), además de potencia y tamaño muestral calculados con varianza de efectos apareados obtenida de piloto legítimo. Los dos promedios publicados de estudios distintos **no** son varianzas de una diferencia emparejada ni sirven para calcular potencia de un estudio conjunto por sí solos.
+
+Las salidas actuales permanecen en el nivel **candidate / tested elsewhere for each single nutrient / joint effect unverified**, y no autorizan resultados clínicos o ambientales.
