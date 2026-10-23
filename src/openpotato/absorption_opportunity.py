@@ -19,6 +19,18 @@ DEFAULT_USDA=ROOT/"datasets"/"official"
 DEFAULT_REFERENCES=ROOT/"datasets"/"adult_references_31_50.csv"
 EXPECTED={"PERU_FE_2023":("iron","10.1016/j.tjnut.2023.04.010",28,Decimal("460")),
           "PERU_ZN_2023":("zinc","10.1016/j.tjnut.2023.08.028",37,Decimal("500"))}
+# Published abstract headline group summaries, independently verified by DOI.
+# These anchors detect accidental edits to curated endpoint transcription.
+PRIMARY_ABSTRACT_ANCHORS={
+    "PERU_FE_2023":{
+        "control":("0.31","16.6","0.24"),
+        "biofortified":("0.63","12.1","0.35"),
+    },
+    "PERU_ZN_2023":{
+        "control":("0.32","25.5","0.40"),
+        "biofortified":("0.48","20.8","0.49"),
+    },
+}
 USDA_FOODS={"170438","170440"}
 SIDES=("control","biofortified")
 
@@ -88,6 +100,9 @@ def validate_studies(raw):
             else:
                 if "absorbed_group_ci95_mg" in item:raise ValueError("Mixing zinc SD with iron CI")
                 sd=number(item.get("absorbed_group_sd_mg"),"group SD",True)
+            original=PRIMARY_ABSTRACT_ANCHORS[key][side]
+            if (c,f,a)!=tuple(Decimal(x) for x in original):
+                raise ValueError("Curated primary abstract endpoint changed; review published source")
             pairs[side]=(c,f,a)
         cc,cf,ca=pairs["control"];bc,bf,ba=pairs["biofortified"]
         if not (bc>cc and bf<cf and ba>ca):
