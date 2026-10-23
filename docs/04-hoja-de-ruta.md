@@ -91,3 +91,15 @@ La línea A **no debe consumir presupuestos/iteraciones indefinidamente sin volv
 - **Rojo (NO demostrado):** aumento propio de Fe/Zn bioavailable, seguridad y glicoalcaloides de nuevas variedades, ensayo propio aprobado, validación WOFOST de campo, parametrización hidrológica de suelo, riego W1/W2 en mm con blancos resueltos, impacto real en costo/salud.
 
 La etapa M1 se puede cerrar documentalmente como **estudio de factibilidad bien delimitado** solo tras comprobar sus criterios originales y dejar pendientes explícitos. Esto no significa completar M2–M6, ni producir una nueva papa nutritiva.
+
+## Prioridad nutricional ejecutada — OP-N1-01 (22 de octubre de 2026)
+
+Tras M1-35 se vuelve al problema central: **nutriente que realmente alcanza al organismo**, no únicamente concentración en el tubérculo. Este hito no incrementa artificialmente el porcentaje de M1 cerrado, pero convierte la pregunta madre en una hipótesis con medidas verificables.
+
+**Resultado verificable:** las publicaciones primarias de dos ensayos de 2023 muestran Fe absorbido 0,35 vs 0,24 mg por 460 g (n=28 mujeres), y Zn absorbido 0,49 vs 0,40 mg por 500 g (n=37 mujeres). En ambos ensayos desciende la fracción absorbida, aunque aumente la masa total absorbida. Es evidencia EXTERNA, no ensayo de OpenPotato, y no demuestra los dos beneficios en un mismo genotipo.
+
+**Entregables implementados:** [registro cuantitativo de evidencia](../datasets/evidence/human_potato_fe_zn_absorption_2023.json), [motor reproducible](../src/openpotato/absorption_opportunity.py), [criterios científicos](48-n1-01-hipotesis-fe-zn-absorbidos.md), pruebas de coherencia y separación de ensayos y [GitHub Actions](../.github/workflows/m1-tests.yml). El USDA oficial histórico FDC 170438/170440 se presenta por separado como nutrientes dietarios por peso cocido, no como mg absorbidos en un experimento peruano. [CI verificada](https://github.com/barbasmarcosi/OpenPotato/actions/runs/39879262443), sin datos clínicos individuales ni material vegetal nuevo.
+
+**Siguiente puerta N1-02** ([issue #9](https://github.com/barbasmarcosi/OpenPotato/issues/9)): revisión bibliográfica con búsqueda y criterios explícitos para identificar, o descartar provisionalmente, ensayos de **hierro y zinc absorbidos en una misma variedad/clon genéticamente caracterizado**, con procesamiento/comparador armonizados, y analizar fitatos/ascorbato, rendimiento, glicoalcaloides y asequibilidad. La novedad de ese enfoque todavía NO ha sido demostrada.
+
+**Regla de decisión:** si una revisión revela que otro centro ya resolvió el mismo problema con evidencia sólida, reproducir/colaborar o pivotar hacia una incertidumbre específica; no reclamar ser pioneros. Una mejora de contenido mineral, un rendimiento hipotético de WOFOST o un perfil USDA no se puede sustituir por una medición isotópica de absorción humana.
